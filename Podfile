@@ -7,6 +7,8 @@ use_frameworks!
 abstract_target 'MDDatabaseTargets' do
     pod 'FMDB', '~> 2.6'
 
-    target 'MDDatabase' do
+    target 'MDObjectDatabase' do
+    end
+    target 'MDObjectDatabaseTests' do
     end
 end
