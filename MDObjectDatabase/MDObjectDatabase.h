@@ -17,10 +17,9 @@ FOUNDATION_EXPORT const unsigned char MDObjectDatabaseVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <MDObjectDatabase/PublicHeader.h>
 
 // Accessor
-#import <MDObjectDatabase/MDDQueueObject.h>
 #import <MDObjectDatabase/MDDAccessorConstants.h>
 #import <MDObjectDatabase/MDDAccessor.h>
-#import <MDObjectDatabase/MDDAccessor+MDDatabase.h>
+#import <MDObjectDatabase/MDDProcessor.h>
 #import <MDObjectDatabase/MDDDescriptor.h>
 #import <MDObjectDatabase/MDDKeyValueDescriptor.h>
 #import <MDObjectDatabase/MDDCondition.h>

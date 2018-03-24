@@ -1,5 +1,5 @@
 //
-//  MDDAccessor+MDDatabase.m
+//  MDDProcessor+MDDatabase.m
 //  MDDatabase
 //
 //  Created by xulinfeng on 2017/11/29.
@@ -8,13 +8,13 @@
 
 #import <FMDB/FMDB.h>
 
-#import "MDDAccessor+MDDatabase.h"
+#import "MDDProcessor+MDDatabase.h"
 #import "MDDatabase+Executing.h"
 
 #import "MDDDescriptor.h"
 #import "MDDTokenDescription.h"
 
-@implementation MDDAccessor (MDDatabase)
+@implementation MDDProcessor (MDDatabase)
 
 - (BOOL)executeInsertDescriptions:(NSArray<MDDTokenDescription *> *)descriptions block:(void (^)(NSUInteger index, NSUInteger rowID))block;{
     NSParameterAssert(descriptions && [descriptions count]);

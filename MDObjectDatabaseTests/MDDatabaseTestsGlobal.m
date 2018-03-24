@@ -11,7 +11,23 @@
 @implementation MDDTestClass
 
 + (instancetype)objectWithDictionary:(NSDictionary *)dictionary;{
-    return nil;
+    NSDictionary *mapper = [self tableMapping];
+    
+    NSMutableDictionary *result = [dictionary ?: @{} mutableCopy];
+    [dictionary enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        id resultKey = [[mapper allKeysForObject:key] firstObject] ?: key;
+        
+        [result removeObjectForKey:key];
+        result[resultKey] = obj;
+    }];
+    return [[self alloc] initWithDictionary:result];
+}
+
+- (instancetype)initWithDictionary:(NSDictionary *)dictionary{
+    if (self = [super init]) {
+        [self setValuesForKeysWithDictionary:dictionary];
+    }
+    return self;
 }
 
 + (BOOL)autoincrement{
@@ -44,8 +60,6 @@
     dispatch_once(&onceToken, ^{
         NSString *folder = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
         database = [MDDatabase databaseWithFilepath:[folder stringByAppendingPathComponent:@"test.db"]];
-        
-        [database attachTableIfNeedsWithClass:[MDDTestClass class]];
     });
     return database;
 }

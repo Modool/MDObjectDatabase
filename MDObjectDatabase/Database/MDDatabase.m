@@ -199,15 +199,15 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
 
 - (BOOL)_verifyColumnsWithInfo:(MDDTableInfo *)info class:(Class<MDDObject>)class{
     NSArray<NSString *> *columnNames = [self columnNamesInDatabaseWithInfo:info];
-    NSMutableArray<MDDColumn *> *appendColumns = [NSMutableArray<MDDColumn *> new];
+    NSMutableArray<MDDColumn *> *insertColumns = [NSMutableArray<MDDColumn *> new];
     for (MDDColumn *column in [info columns]) {
         if ([columnNames containsObject:[column name]]) continue;
         
-        [appendColumns addObject:column];
+        [insertColumns addObject:column];
     }
-    if (![appendColumns count]) return YES;
+    if (![insertColumns count]) return YES;
     
-    return [self _appendColumns:appendColumns tableName:[info tableName] class:class];
+    return [self _appendColumns:insertColumns tableName:[info tableName] class:class];
 }
 
 - (BOOL)_appendColumns:(NSArray<MDDColumn *> *)columns tableName:(NSString *)tableName class:(Class<MDDObject>)class{
@@ -324,16 +324,16 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
     
     NSArray<MDDLocalIndex *> *localIndexes = [self _localIndexNamesWithInfo:info];
     
-    NSMutableSet<MDDIndex *> *appendIndexes = [NSMutableSet new];
+    NSMutableSet<MDDIndex *> *insertIndexes = [NSMutableSet new];
     NSMutableSet<MDDLocalIndex *> *deleteIndexes = [NSMutableSet new];
     
     for (MDDIndex *index in indexes) {
         index.tableInfo = info;
         
         MDDLocalIndex *localIndex = [self _localIndexWithName:[index name] indexes:localIndexes];
-        if (!localIndex) [appendIndexes addObject:index];
+        if (!localIndex) [insertIndexes addObject:index];
         else if (![[localIndex SQL] isEqualToString:[index creatingSQL]]) {
-            [appendIndexes addObject:index];
+            [insertIndexes addObject:index];
             [deleteIndexes addObject:localIndex];
         }
     }
@@ -346,8 +346,8 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
         if (![self _deleteLocalIndexes:deleteIndexes]) return NO;
     }
     
-    if ([appendIndexes count]) {
-        if (![self _appendIndexes:appendIndexes]) return NO;
+    if ([insertIndexes count]) {
+        if (![self _appendIndexes:insertIndexes]) return NO;
     }
     return  YES;
 }
