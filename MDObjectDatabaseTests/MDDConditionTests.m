@@ -30,7 +30,7 @@
 }
 
 - (void)testKeyValue {
-    MDDCondition *condition = [MDDCondition conditionWithKey:@"integerValue" value:@123];
+    MDDCondition *condition = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
     MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class]];
     
     MDDTokenDescription *description = [MDDCondition descriptionWithConditions:@[condition] operation:MDDConditionOperationAnd tableInfo:tableInfo];
@@ -40,10 +40,10 @@
 }
 
 - (void)testConditionSet_AND_OR {
-    MDDCondition *condition1 = [MDDCondition conditionWithKey:@"integerValue" value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithKey:@"boolValue" value:@YES];
+    MDDCondition *condition1 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, boolValue) value:@YES];
     MDDCondition *condition3 = [MDDCondition conditionWithPrimaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithKey:@"text" value:@"text"];
+    MDDCondition *condition4 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4]];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4]];
@@ -58,10 +58,10 @@
 }
 
 - (void)testConditionSet_OR_AND {
-    MDDCondition *condition1 = [MDDCondition conditionWithKey:@"integerValue" value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithKey:@"boolValue" value:@YES];
+    MDDCondition *condition1 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, boolValue) value:@YES];
     MDDCondition *condition3 = [MDDCondition conditionWithPrimaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithKey:@"text" value:@"text"];
+    MDDCondition *condition4 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4] operation:MDDConditionOperationOr];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4] operation:MDDConditionOperationOr];
@@ -76,10 +76,10 @@
 }
 
 - (void)testConditionSet_AND_AND {
-    MDDCondition *condition1 = [MDDCondition conditionWithKey:@"integerValue" value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithKey:@"boolValue" value:@YES];
+    MDDCondition *condition1 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, boolValue) value:@YES];
     MDDCondition *condition3 = [MDDCondition conditionWithPrimaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithKey:@"text" value:@"text"];
+    MDDCondition *condition4 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4]];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4]];
@@ -96,10 +96,10 @@
 }
 
 - (void)testConditionSet_OR_OR {
-    MDDCondition *condition1 = [MDDCondition conditionWithKey:@"integerValue" value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithKey:@"boolValue" value:@YES];
+    MDDCondition *condition1 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, boolValue) value:@YES];
     MDDCondition *condition3 = [MDDCondition conditionWithPrimaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithKey:@"text" value:@"text"];
+    MDDCondition *condition4 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4] operation:MDDConditionOperationOr];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4] operation:MDDConditionOperationOr];

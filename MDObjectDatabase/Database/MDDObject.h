@@ -7,8 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "MDDMacros.h"
 
-FOUNDATION_EXTERN NSString * const MDDatabaseErrorDomain;
+MDD_EXTERN NSString * const MDDatabaseErrorDomain;
 
 @class MDDColumnConfiguration, MDDColumn, MDDIndex;
 @protocol MDDSerializedObject <NSObject>

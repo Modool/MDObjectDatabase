@@ -13,6 +13,8 @@
 #import "MDPropertyAttributes.h"
 #import "MDDObject.h"
 
+NSString * const MDDObjectObjectIDName = @"objectID";
+
 @implementation MDDColumn
 
 + (instancetype)columnWithName:(NSString *)name propertyName:(NSString *)propertyName primary:(BOOL)primary autoincrement:(BOOL)autoincrement attribute:(MDPropertyAttributes *)attribute; {

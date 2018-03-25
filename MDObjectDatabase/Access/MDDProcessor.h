@@ -43,6 +43,9 @@
 - (BOOL)updateWithKey:(NSString *)key value:(id)value conditionSet:(MDDConditionSet *)conditionSet;
 - (BOOL)updateWithKey:(NSString *)key value:(id)value operation:(MDDOperation)operation conditionSet:(MDDConditionSet *)conditionSet;
 - (BOOL)updateWithKeyValues:(NSDictionary *)keyValues conditionSet:(MDDConditionSet *)conditionSet;
+
+- (BOOL)updateWithSetter:(MDDSetter *)settter;
+- (BOOL)updateWithSetter:(MDDSetter *)settter conditionSet:(MDDConditionSet *)conditionSet;
 - (BOOL)updateWithSetters:(NSArray<MDDSetter *> *)settters conditionSet:(MDDConditionSet *)conditionSet;
 
 #pragma mark - Delete

@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "MDDMacros.h"
 
 typedef NS_ENUM(NSUInteger, MDDColumnType) {
     MDDColumnTypeText,
@@ -39,4 +40,4 @@ typedef NS_ENUM(NSUInteger, MDDColumnType) {
 
 @end
 
-FOUNDATION_EXTERN MDDColumnType MDDColumnTypeDescription(MDPropertyAttributes *attribute);
+MDD_EXTERN MDDColumnType MDDColumnTypeDescription(MDPropertyAttributes *attribute);

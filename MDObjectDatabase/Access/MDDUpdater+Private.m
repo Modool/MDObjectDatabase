@@ -18,19 +18,24 @@
 + (MDDTokenDescription *)descriptionWithUpdater:(MDDUpdater *)updater tableInfo:(MDDTableInfo *)tableInfo;{
     NSParameterAssert(updater && tableInfo);
     
-    NSString *tokenString = [updater descriptionWithTableInfo:tableInfo value:nil];
-    
-    NSArray *values = @[];
+    NSMutableString *tokenString = [[updater descriptionWithTableInfo:tableInfo value:nil] ?: @"" mutableCopy];
+    NSMutableArray *values = [NSMutableArray array];
     MDDTokenDescription *setterDescription = [MDDSetter descriptionWithSetters:[updater setters] tableInfo:tableInfo];
     NSParameterAssert(setterDescription);
     
-    values = [values arrayByAddingObjectsFromArray:[setterDescription values]];
-    tokenString = [tokenString stringByAppendingFormat:@" SET %@ ", [setterDescription tokenString]];
+    if ([[setterDescription values] count]) {
+        [values addObjectsFromArray:[setterDescription values]];
+    }
+    if ([[setterDescription tokenString] length]) {
+        [tokenString appendFormat:@" SET %@ ", [setterDescription tokenString]];
+    }
     
     MDDTokenDescription *conditionDescription = [MDDConditionSet descriptionWithConditionSet:[updater conditionSet] tableInfo:tableInfo];
-    if (conditionDescription && [conditionDescription tokenString]) {
-        values = [values arrayByAddingObjectsFromArray:[conditionDescription values]];
-        tokenString = [tokenString stringByAppendingFormat:@" WHERE %@ ", [conditionDescription tokenString]];
+    if ([[conditionDescription values] count]) {
+        [values addObjectsFromArray:[conditionDescription values]];
+    }
+    if ([[conditionDescription tokenString] length]) {
+        [tokenString appendFormat:@" WHERE %@ ", [conditionDescription tokenString]];
     }
     
     return [MDDTokenDescription descriptionWithTokenString:tokenString values:values];

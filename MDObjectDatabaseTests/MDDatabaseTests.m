@@ -65,10 +65,28 @@
     XCTAssert(object);
 }
 
+- (void)testUpdateAllRow {
+    
+    NSUInteger value = arc4random() % 10;
+    MDDSetter *setter = [MDDSetter setterWithKey:MDDKey(MDDTestClass, integerValue) value:@(value)];
+    __block BOOL state = NO;
+    [[self accessor] sync:^(id<MDDProcessor> processor) {
+        state = [processor updateWithSetter:setter];
+    }];
+    XCTAssert(state);
+    
+    __block MDDTestClass *object = nil;
+    [[self accessor] sync:^(id<MDDProcessor> processor) {
+        object = [[processor queryWithKey:MDDKey(MDDTestClass, integerValue) value:@(value)] firstObject];
+    }];
+    XCTAssert(object);
+    XCTAssert(object.integerValue == value);
+}
+
 - (void)testUpdate {
     __block BOOL state = NO;
     [[self accessor] sync:^(id<MDDProcessor> processor) {
-        state = [processor updateWithPrimaryValue:@"1" key:@"text" value:@"hhhh"];
+        state = [processor updateWithPrimaryValue:@"1" key:MDDKey(MDDTestClass, text) value:@"hhhh"];
     }];
     XCTAssert(state);
     

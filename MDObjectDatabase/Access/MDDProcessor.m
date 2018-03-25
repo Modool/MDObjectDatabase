@@ -261,6 +261,16 @@
 
 #pragma mark - Update - Provide setter and conditions
 
+- (BOOL)updateWithSetter:(MDDSetter *)settter;{
+    NSParameterAssert(settter);
+    return [self updateWithSetter:settter conditionSet:nil];
+}
+
+- (BOOL)updateWithSetter:(MDDSetter *)settter conditionSet:(MDDConditionSet *)conditionSet;{
+    NSParameterAssert(settter);
+    return [self updateWithSetters:@[settter] conditionSet:conditionSet];
+}
+
 - (BOOL)updateWithSetters:(NSArray<MDDSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;{
     NSParameterAssert(setters && [setters count]);
     Class class = [self modelClass];

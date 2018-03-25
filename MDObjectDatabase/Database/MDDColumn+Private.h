@@ -7,8 +7,9 @@
 //
 
 #import "MDDColumn.h"
+#import "MDDMacros.h"
 
-static NSString * const MDDObjectObjectIDName = @"objectID";
+MDD_EXTERN NSString * const MDDObjectObjectIDName;
 
 @interface MDDColumn ()
 

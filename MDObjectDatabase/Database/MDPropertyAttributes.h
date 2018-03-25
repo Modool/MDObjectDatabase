@@ -7,6 +7,7 @@
 //
 
 #import <objc/runtime.h>
+#import "MDDMacros.h"
 
 /**
  * Describes the memory management policy of a property.
@@ -119,17 +120,17 @@ typedef NS_ENUM(NSUInteger, MDPropertyMemoryManagementPolicy) {
  *
  * @note To get class methods in this manner, use a metaclass for \a aClass.
  */
-FOUNDATION_EXTERN Method MDImmediateInstanceMethod (Class aClass, SEL aSelector);
+MDD_EXTERN Method MDImmediateInstanceMethod (Class aClass, SEL aSelector);
 
 /**
  * Returns a pointer to a structure containing information about \a property.
  * You must \c free() the returned pointer. Returns \c NULL if there is an error
  * obtaining information from \a property.
  */
-FOUNDATION_EXTERN MDPropertyAttributes *MDCopyPropertyAttributes (objc_property_t property);
+MDD_EXTERN MDPropertyAttributes *MDCopyPropertyAttributes (objc_property_t property);
 
-FOUNDATION_EXTERN NSArray<MDPropertyAttributes *> *MDPropertyAttributesForCurrentClass(Class<NSObject> class);
+MDD_EXTERN NSArray<MDPropertyAttributes *> *MDPropertyAttributesForCurrentClass(Class<NSObject> class);
 
-FOUNDATION_EXTERN NSArray<MDPropertyAttributes *> *MDPropertyAttributesForClass(Class<NSObject> class, BOOL containedSuperClass);
+MDD_EXTERN NSArray<MDPropertyAttributes *> *MDPropertyAttributesForClass(Class<NSObject> class, BOOL containedSuperClass);
 
 

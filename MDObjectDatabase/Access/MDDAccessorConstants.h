@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "MDDMacros.h"
 
 typedef NS_ENUM(NSUInteger, MDDOperation) {
     MDDOperationEqual,
@@ -47,14 +48,14 @@ typedef NSString * MDDFunction NS_EXTENSIBLE_STRING_ENUM;
 typedef NSString * MDDFunction;
 #endif
 
-FOUNDATION_EXTERN NSString * const MDDatabaseToken;
+MDD_EXTERN NSString * const MDDatabaseToken;
 
-FOUNDATION_EXTERN MDDFunction   const MDDFunctionSUM;
-FOUNDATION_EXTERN MDDFunction   const MDDFunctionMAX;
-FOUNDATION_EXTERN MDDFunction   const MDDFunctionMIN;
-FOUNDATION_EXTERN MDDFunction   const MDDFunctionCOUNT;
-FOUNDATION_EXTERN MDDFunction   const MDDFunctionAVERAGE;
+MDD_EXTERN MDDFunction const MDDFunctionSUM;
+MDD_EXTERN MDDFunction const MDDFunctionMAX;
+MDD_EXTERN MDDFunction const MDDFunctionMIN;
+MDD_EXTERN MDDFunction const MDDFunctionCOUNT;
+MDD_EXTERN MDDFunction const MDDFunctionAVERAGE;
 
-FOUNDATION_EXTERN NSString *MDOperationDescription(MDDOperation operation);
-FOUNDATION_EXTERN NSString *MDConditionOperationDescription(MDDConditionOperation operation);
-FOUNDATION_EXTERN Class MDOperationValueRequireClass(MDDOperation operation);
+MDD_EXTERN NSString *MDOperationDescription(MDDOperation operation);
+MDD_EXTERN NSString *MDConditionOperationDescription(MDDConditionOperation operation);
+MDD_EXTERN Class MDOperationValueRequireClass(MDDOperation operation);

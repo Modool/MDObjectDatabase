@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		08468FBA1FF3A6120063068C /* MDObjectDatabase.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08468FB01FF3A6120063068C /* MDObjectDatabase.framework */; };
 		08468FBF1FF3A6120063068C /* MDDatabaseTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 08468FBE1FF3A6120063068C /* MDDatabaseTests.m */; };
+		08478DCD206769890015F09A /* MDDMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DCC206769890015F09A /* MDDMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0850A3A02064C6130022B36B /* MDDTokenDescription.h in Headers */ = {isa = PBXBuildFile; fileRef = 0850A39E2064C6130022B36B /* MDDTokenDescription.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0850A3A12064C6130022B36B /* MDDTokenDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = 0850A39F2064C6130022B36B /* MDDTokenDescription.m */; };
 		0850A3A42064C6DA0022B36B /* MDDKeyValueDescriptor.h in Headers */ = {isa = PBXBuildFile; fileRef = 0850A3A22064C6DA0022B36B /* MDDKeyValueDescriptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -112,6 +113,7 @@
 		08468FB91FF3A6120063068C /* MDObjectDatabaseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MDObjectDatabaseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		08468FBE1FF3A6120063068C /* MDDatabaseTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDatabaseTests.m; sourceTree = "<group>"; };
 		08468FC01FF3A6120063068C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		08478DCC206769890015F09A /* MDDMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDMacros.h; sourceTree = "<group>"; };
 		0850A39E2064C6130022B36B /* MDDTokenDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDTokenDescription.h; sourceTree = "<group>"; };
 		0850A39F2064C6130022B36B /* MDDTokenDescription.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDTokenDescription.m; sourceTree = "<group>"; };
 		0850A3A22064C6DA0022B36B /* MDDKeyValueDescriptor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDKeyValueDescriptor.h; sourceTree = "<group>"; };
@@ -337,6 +339,7 @@
 				08AD798220628DFD004122D2 /* MDDIndex.h */,
 				08AD798320628DFD004122D2 /* MDDIndex.m */,
 				08AD797820628DFC004122D2 /* MDDIndex+Private.h */,
+				08478DCC206769890015F09A /* MDDMacros.h */,
 			);
 			path = Access;
 			sourceTree = "<group>";
@@ -398,6 +401,7 @@
 				08AD796720628DF4004122D2 /* MDDObject.h in Headers */,
 				0850A3F22064CCE70022B36B /* MDDDeleter+Private.h in Headers */,
 				0850A3E22064CC060022B36B /* MDDSort+Private.h in Headers */,
+				08478DCD206769890015F09A /* MDDMacros.h in Headers */,
 				0850A3D02064C9330022B36B /* MDDFunctionQuery.h in Headers */,
 				0850A3EA2064CC4C0022B36B /* MDDUpdater+Private.h in Headers */,
 				0850A3E62064CC230022B36B /* MDDQuery+Private.h in Headers */,
