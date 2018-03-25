@@ -8,7 +8,7 @@
 
 #import "MDDatabase.h"
 
-@class FMDatabaseQueue;
+@class FMDatabaseQueue, MDDConfiguration, MDDCompat, MDDLogger;
 @interface MDDatabase ()
 
 @property (nonatomic, strong, readonly) NSRecursiveLock *lock;
@@ -16,6 +16,12 @@
 @property (nonatomic, strong, readonly) FMDatabaseQueue *databaseQueue;
 
 @property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, MDDTableInfo *> *tableInfos;
+
+@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, MDDConfiguration *> *configurations;
+
+@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, Class> *tableClasses;
+
+@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, MDDCompat *> *compats;
 
 @property (nonatomic, assign) BOOL inTransaction;
 

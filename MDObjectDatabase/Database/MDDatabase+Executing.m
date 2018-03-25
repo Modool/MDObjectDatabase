@@ -12,10 +12,6 @@
 
 @implementation MDDatabase (Executing)
 
-- (void)database:(void (^)(FMDatabase *db))block;{
-    
-}
-
 - (void)executeInTransaction:(void (^)(FMDatabase *db, BOOL *rollback))block {
     [[self lock] lock];
     [[self databaseQueue] inTransaction:^(FMDatabase *db, BOOL *rollback) {
@@ -50,7 +46,6 @@
         } else {
             result = [database executeUpdate:SQL withArgumentsInArray:arguments];
         }
-        NSLog(@"Database excute to update: %d \nSQL: %@ \nValues:%@", result, SQL, arguments);
         if (completion) completion(database);
     }];
     [[self lock] unlock];
@@ -64,8 +59,6 @@
 
 - (void)executeQuerySQL:(NSString *)SQL withArgumentsInArray:(NSArray *)arguments block:(void (^)(NSDictionary *dictionary))block;{
     NSParameterAssert([SQL length]);
-    
-    NSLog(@"Database excute to query with SQL: %@ \nValues:%@", SQL, arguments);
     
     [[self lock] lock];
     [[self databaseQueue] inDatabase:^(FMDatabase *database) {

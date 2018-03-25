@@ -19,6 +19,7 @@ FOUNDATION_EXPORT const unsigned char MDObjectDatabaseVersionString[];
 // Accessor
 #import <MDObjectDatabase/MDDAccessorConstants.h>
 #import <MDObjectDatabase/MDDAccessor.h>
+#import <MDObjectDatabase/MDDatabase+MDDAccessor.h>
 #import <MDObjectDatabase/MDDProcessor.h>
 #import <MDObjectDatabase/MDDDescriptor.h>
 #import <MDObjectDatabase/MDDKeyValueDescriptor.h>
@@ -38,8 +39,14 @@ FOUNDATION_EXPORT const unsigned char MDObjectDatabaseVersionString[];
 
 // Database
 #import <MDObjectDatabase/MDDRange.h>
+#import <MDObjectDatabase/MDDObject.h>
 #import <MDObjectDatabase/MDDatabase.h>
+#import <MDObjectDatabase/MDDatabaseCenter.h>
 #import <MDObjectDatabase/MDDColumnConfiguration.h>
 #import <MDObjectDatabase/MDDTableInfo.h>
 #import <MDObjectDatabase/MDDColumn.h>
+#import <MDObjectDatabase/MDDConfiguration.h>
+#import <MDObjectDatabase/MDDCompat.h>
+#import <MDObjectDatabase/MDDErrorCode.h>
+
 

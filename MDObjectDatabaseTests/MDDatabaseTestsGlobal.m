@@ -59,7 +59,24 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         NSString *folder = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-        database = [MDDatabase databaseWithFilepath:[folder stringByAppendingPathComponent:@"test.db"]];
+        NSString *filepath = [folder stringByAppendingPathComponent:@"test.db"];
+        database = [[MDDatabaseCenter defaultCenter] requrieDatabaseWithFilepath:filepath];
+        
+        NSDictionary *tableMapper = @{@"objectID": @"id",
+                                      @"text": @"text",
+                                      @"integerValue": @"integer_value",
+                                      @"floatValue": @"float_value",
+                                      @"boolValue": @"bool_value"};
+        
+        MDDConfiguration *configuration = [MDDConfiguration configurationWithClass:[MDDTestClass class] propertyMapper:tableMapper primaryProperty:@"objectID"];
+        NSError *error = nil;
+        MDDCompat *compat = [database addConfiguration:configuration error:&error];
+        [compat bindColumnIncrement:^MDDCompatResult(MDDCompatOperation operation, MDDLocalColumn *localColumn, MDDColumn *column) {
+            return MDDCompatResultContinue;
+        }];
+        [compat bindIndexIncrement:^MDDCompatResult(MDDCompatOperation operation, MDDLocalIndex *localIndex, MDDIndex *index) {
+            return MDDCompatResultContinue;
+        }];
     });
     return database;
 }

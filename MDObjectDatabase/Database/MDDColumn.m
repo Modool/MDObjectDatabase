@@ -10,10 +10,12 @@
 #import <UIKit/UIKit.h>
 #import "MDDColumn.h"
 #import "MDDColumn+Private.h"
-#import "MDPropertyAttributes.h"
-#import "MDDObject.h"
 
-NSString * const MDDObjectObjectIDName = @"objectID";
+#import "MDDTableInfo.h"
+#import "MDPropertyAttributes.h"
+#import "MDDColumnConfiguration.h"
+
+#import "MDDObject.h"
 
 @implementation MDDColumn
 
@@ -25,9 +27,23 @@ NSString * const MDDObjectObjectIDName = @"objectID";
     property.attribute = attribute;
     property.primary = primary;
     property.autoincrement = autoincrement;
-    property.type = autoincrement ? MDDColumnTypeInteger : MDDColumnTypeDescription(attribute);
+    property.type = autoincrement ? MDDColumnTypeInteger : MDDColumnTypeFromAttribute(attribute);
     
     return property;
+}
+
+- (NSUInteger)hash{
+    return [[self name] hash] ^ [[self propertyName] hash];
+}
+
+- (BOOL)isEqual:(MDDColumn *)object{
+    if ([super isEqual:object]) return YES;
+    if (![object isKindOfClass:[MDDColumn class]]) return NO;
+    return [[self name] isEqualToString:[object name]] && [[self propertyName] isEqualToString:[object propertyName]];
+}
+
+- (BOOL)isEqualLocalColumn:(MDDLocalColumn *)localColumn;{
+    return [[self name] isEqualToString:[localColumn name]] && self.primary == localColumn.primary && self.autoincrement == localColumn.autoincrement && self.type == localColumn.type;
 }
 
 // Objective-C class to database value
@@ -159,7 +175,99 @@ NSString * const MDDObjectObjectIDName = @"objectID";
 
 @end
 
-MDDColumnType MDDColumnTypeDescription(MDPropertyAttributes *attribute) {
+@implementation MDDLocalColumn
+@dynamic propertyName;
+
++ (instancetype)columnWithName:(NSString *)name primary:(BOOL)primary autoincrement:(BOOL)autoincrement type:(MDDColumnType)type;{
+    MDDLocalColumn *column = [super columnWithName:name propertyName:nil primary:primary autoincrement:autoincrement attribute:nil];
+    column.type = type;
+    
+    return column;
+}
+
++ (NSDictionary<NSString *, MDDLocalColumn *> *)columnsWithSQL:(NSString *)SQL tableInfo:(MDDTableInfo *)tableInfo;{
+    NSRange range = [SQL rangeOfString:@"("];
+    NSString *descriptions = [SQL substringWithRange:NSMakeRange(range.location + 1, [SQL length] - range.location - 1 - 1)];
+    descriptions = [descriptions stringByReplacingOccurrencesOfString:@"    " withString:@" "];
+    descriptions = [descriptions stringByReplacingOccurrencesOfString:@"   " withString:@" "];
+    descriptions = [descriptions stringByReplacingOccurrencesOfString:@"  " withString:@" "];
+    
+    NSArray<NSString *> *columnDescriptions = [descriptions componentsSeparatedByString:@","];
+    NSMutableDictionary<NSString *, MDDLocalColumn *> *columns = [NSMutableDictionary dictionary];
+    for (NSString *description in columnDescriptions) {
+        NSString *trimingDescription = [[description stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] lowercaseString];
+        NSArray<NSString *> *keywords = [trimingDescription componentsSeparatedByString:@" "];
+        
+        NSString *name = keywords.count ? keywords[0] : nil;
+        NSString *typeFullString = keywords.count >= 2 ? keywords[1] : nil;
+        NSString *typeString = typeFullString;
+        NSUInteger length = 0;
+        
+        NSRange typeRange = [typeFullString rangeOfString:@"("];
+        if (typeRange.location != NSNotFound) {
+            typeString = [typeFullString substringToIndex:typeRange.location - 1];
+            length = [[typeFullString substringWithRange:NSMakeRange(typeRange.location + 1, typeFullString.length - typeRange.location - 2)] integerValue];
+            
+        }
+        NSUInteger index = [keywords indexOfObject:@"default"];
+        NSString *defaultValue = index != NSNotFound && keywords.count > (index + 1) ? keywords[index + 1] : nil;
+        
+        NSString *checkValue = nil;
+        for (NSString *keyword in keywords) {
+            NSRange range = [keyword rangeOfString:@"check("];
+            if (range.location == NSNotFound) continue;
+            
+            NSUInteger location = range.location + range.length + 1;
+            checkValue = [keyword substringWithRange:NSMakeRange(location, keyword.length - location - 1)];
+        }
+        
+        BOOL primary = [trimingDescription containsString:@"primary"];
+        BOOL autoincrement = [trimingDescription containsString:@"autoincrement"];
+        BOOL nullabled = [trimingDescription containsString:@"not null"];
+        BOOL unique = [trimingDescription containsString:@"unique"];
+        MDDColumnType type = MDDColumnTypeFromDescription(typeString);
+        
+        MDDLocalColumn *column = [MDDLocalColumn columnWithName:name primary:primary autoincrement:autoincrement type:type];
+        MDDColumnConfiguration *configuration = [MDDColumnConfiguration defaultConfigurationWithColumn:column];
+        configuration.unique = unique;
+        configuration.length = length;
+        configuration.nullabled = nullabled;
+        configuration.defaultValue = defaultValue;
+        configuration.checkValue = checkValue;
+        
+        column.configuration = configuration;
+        
+        [columns setObject:column forKey:name];
+    }
+    
+    return [columns copy];
+}
+
+@end
+
+NSDictionary *MDDColumnTypeDescriptions(){
+    static NSDictionary *descriptions = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        descriptions = @{@(MDDColumnTypeText): @"TEXT",
+                         @(MDDColumnTypeInteger): @"INTEGER",
+                         @(MDDColumnTypeFloat): @"FLOAT",
+                         @(MDDColumnTypeDouble): @"DOUBLE",
+                         @(MDDColumnTypeBoolean): @"BLOB",
+                         };
+    });
+    return descriptions;
+}
+
+MDDColumnType MDDColumnTypeFromDescription(NSString *description) {
+    return [[[MDDColumnTypeDescriptions() allKeysForObject:[description uppercaseString]] firstObject] integerValue];
+}
+
+NSString *MDDColumnTypeDescription(MDDColumnType type){
+    return MDDColumnTypeDescriptions()[@(type)];
+}
+
+MDDColumnType MDDColumnTypeFromAttribute(MDPropertyAttributes *attribute) {
     if ([attribute objectClass] || ![[attribute type] length]) return MDDColumnTypeText;
     
     const char *type = [[attribute type] UTF8String];

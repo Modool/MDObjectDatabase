@@ -9,7 +9,24 @@
 /* Begin PBXBuildFile section */
 		08468FBA1FF3A6120063068C /* MDObjectDatabase.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08468FB01FF3A6120063068C /* MDObjectDatabase.framework */; };
 		08468FBF1FF3A6120063068C /* MDDatabaseTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 08468FBE1FF3A6120063068C /* MDDatabaseTests.m */; };
-		08478DCD206769890015F09A /* MDDMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DCC206769890015F09A /* MDDMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08478DD22067BF710015F09A /* MDDConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DD02067BF710015F09A /* MDDConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08478DD32067BF710015F09A /* MDDConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 08478DD12067BF710015F09A /* MDDConfiguration.m */; };
+		08478DDA2067C69D0015F09A /* MDDCompat.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DD82067C69D0015F09A /* MDDCompat.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08478DDB2067C69D0015F09A /* MDDCompat.m in Sources */ = {isa = PBXBuildFile; fileRef = 08478DD92067C69D0015F09A /* MDDCompat.m */; };
+		08478DDD2067CAF10015F09A /* MDDErrorCode.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DDC2067CAF10015F09A /* MDDErrorCode.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08478DDF2067CDB10015F09A /* MDDConfiguration+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DDE2067CDB10015F09A /* MDDConfiguration+Private.h */; };
+		08478DE12067CE420015F09A /* MDDErrorCode.m in Sources */ = {isa = PBXBuildFile; fileRef = 08478DE02067CE420015F09A /* MDDErrorCode.m */; };
+		08478DE32067CE730015F09A /* MDDMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DE22067CE730015F09A /* MDDMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08478DE52067D30A0015F09A /* MDDObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 08478DE42067D30A0015F09A /* MDDObject.m */; };
+		08478DE72067D3150015F09A /* MDDObject+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DE62067D3150015F09A /* MDDObject+Private.h */; };
+		08478DE92067DAD90015F09A /* MDDCompat+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DE82067DAD90015F09A /* MDDCompat+Private.h */; };
+		08478DEB2067E8850015F09A /* MDDTableInfo+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DEA2067E8850015F09A /* MDDTableInfo+Private.h */; };
+		08478DEE2067F2330015F09A /* MDDLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DEC2067F2330015F09A /* MDDLogger.h */; };
+		08478DEF2067F2330015F09A /* MDDLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 08478DED2067F2330015F09A /* MDDLogger.m */; };
+		08478DF22067F46C0015F09A /* MDDatabaseCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DF02067F46C0015F09A /* MDDatabaseCenter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08478DF32067F46C0015F09A /* MDDatabaseCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = 08478DF12067F46C0015F09A /* MDDatabaseCenter.m */; };
+		08478DF82067FB920015F09A /* MDDatabase+MDDAccessor.h in Headers */ = {isa = PBXBuildFile; fileRef = 08478DF62067FB920015F09A /* MDDatabase+MDDAccessor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		08478DF92067FB920015F09A /* MDDatabase+MDDAccessor.m in Sources */ = {isa = PBXBuildFile; fileRef = 08478DF72067FB920015F09A /* MDDatabase+MDDAccessor.m */; };
 		0850A3A02064C6130022B36B /* MDDTokenDescription.h in Headers */ = {isa = PBXBuildFile; fileRef = 0850A39E2064C6130022B36B /* MDDTokenDescription.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0850A3A12064C6130022B36B /* MDDTokenDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = 0850A39F2064C6130022B36B /* MDDTokenDescription.m */; };
 		0850A3A42064C6DA0022B36B /* MDDKeyValueDescriptor.h in Headers */ = {isa = PBXBuildFile; fileRef = 0850A3A22064C6DA0022B36B /* MDDKeyValueDescriptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -113,7 +130,24 @@
 		08468FB91FF3A6120063068C /* MDObjectDatabaseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MDObjectDatabaseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		08468FBE1FF3A6120063068C /* MDDatabaseTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDatabaseTests.m; sourceTree = "<group>"; };
 		08468FC01FF3A6120063068C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		08478DCC206769890015F09A /* MDDMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDMacros.h; sourceTree = "<group>"; };
+		08478DD02067BF710015F09A /* MDDConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDConfiguration.h; sourceTree = "<group>"; };
+		08478DD12067BF710015F09A /* MDDConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDConfiguration.m; sourceTree = "<group>"; };
+		08478DD82067C69D0015F09A /* MDDCompat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDCompat.h; sourceTree = "<group>"; };
+		08478DD92067C69D0015F09A /* MDDCompat.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDCompat.m; sourceTree = "<group>"; };
+		08478DDC2067CAF10015F09A /* MDDErrorCode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDErrorCode.h; sourceTree = "<group>"; };
+		08478DDE2067CDB10015F09A /* MDDConfiguration+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MDDConfiguration+Private.h"; sourceTree = "<group>"; };
+		08478DE02067CE420015F09A /* MDDErrorCode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDErrorCode.m; sourceTree = "<group>"; };
+		08478DE22067CE730015F09A /* MDDMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MDDMacros.h; sourceTree = "<group>"; };
+		08478DE42067D30A0015F09A /* MDDObject.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDObject.m; sourceTree = "<group>"; };
+		08478DE62067D3150015F09A /* MDDObject+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MDDObject+Private.h"; sourceTree = "<group>"; };
+		08478DE82067DAD90015F09A /* MDDCompat+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MDDCompat+Private.h"; sourceTree = "<group>"; };
+		08478DEA2067E8850015F09A /* MDDTableInfo+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MDDTableInfo+Private.h"; sourceTree = "<group>"; };
+		08478DEC2067F2330015F09A /* MDDLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDLogger.h; sourceTree = "<group>"; };
+		08478DED2067F2330015F09A /* MDDLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDLogger.m; sourceTree = "<group>"; };
+		08478DF02067F46C0015F09A /* MDDatabaseCenter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDatabaseCenter.h; sourceTree = "<group>"; };
+		08478DF12067F46C0015F09A /* MDDatabaseCenter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDatabaseCenter.m; sourceTree = "<group>"; };
+		08478DF62067FB920015F09A /* MDDatabase+MDDAccessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MDDatabase+MDDAccessor.h"; sourceTree = "<group>"; };
+		08478DF72067FB920015F09A /* MDDatabase+MDDAccessor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "MDDatabase+MDDAccessor.m"; sourceTree = "<group>"; };
 		0850A39E2064C6130022B36B /* MDDTokenDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDTokenDescription.h; sourceTree = "<group>"; };
 		0850A39F2064C6130022B36B /* MDDTokenDescription.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MDDTokenDescription.m; sourceTree = "<group>"; };
 		0850A3A22064C6DA0022B36B /* MDDKeyValueDescriptor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MDDKeyValueDescriptor.h; sourceTree = "<group>"; };
@@ -280,6 +314,8 @@
 				08AD797920628DFC004122D2 /* MDDAccessorConstants.m */,
 				08AD797D20628DFC004122D2 /* MDDAccessor.h */,
 				08AD797C20628DFC004122D2 /* MDDAccessor.m */,
+				08478DF62067FB920015F09A /* MDDatabase+MDDAccessor.h */,
+				08478DF72067FB920015F09A /* MDDatabase+MDDAccessor.m */,
 				08ECBFF620664E6F00FEA9AA /* MDDProcessor.h */,
 				08ECBFF720664E6F00FEA9AA /* MDDProcessor.m */,
 				08ECBFFA2066526E00FEA9AA /* MDDProcessor+Private.h */,
@@ -339,7 +375,6 @@
 				08AD798220628DFD004122D2 /* MDDIndex.h */,
 				08AD798320628DFD004122D2 /* MDDIndex.m */,
 				08AD797820628DFC004122D2 /* MDDIndex+Private.h */,
-				08478DCC206769890015F09A /* MDDMacros.h */,
 			);
 			path = Access;
 			sourceTree = "<group>";
@@ -347,22 +382,38 @@
 		08468FD71FF3A7390063068C /* Database */ = {
 			isa = PBXGroup;
 			children = (
+				08478DE22067CE730015F09A /* MDDMacros.h */,
 				08F6BDF42063FEAE0073963E /* MDDRange.h */,
+				08478DDC2067CAF10015F09A /* MDDErrorCode.h */,
+				08478DE02067CE420015F09A /* MDDErrorCode.m */,
 				08AD795620628DF3004122D2 /* MDDObject.h */,
+				08478DE42067D30A0015F09A /* MDDObject.m */,
+				08478DE62067D3150015F09A /* MDDObject+Private.h */,
+				08478DF02067F46C0015F09A /* MDDatabaseCenter.h */,
+				08478DF12067F46C0015F09A /* MDDatabaseCenter.m */,
 				08AD795E20628DF3004122D2 /* MDDatabase.h */,
 				08AD796120628DF4004122D2 /* MDDatabase.m */,
 				08AD796020628DF4004122D2 /* MDDatabase+Private.h */,
 				08AD795520628DF3004122D2 /* MDDatabase+Executing.h */,
 				08AD796320628DF4004122D2 /* MDDatabase+Executing.m */,
+				08478DD02067BF710015F09A /* MDDConfiguration.h */,
+				08478DD12067BF710015F09A /* MDDConfiguration.m */,
+				08478DDE2067CDB10015F09A /* MDDConfiguration+Private.h */,
+				08478DD82067C69D0015F09A /* MDDCompat.h */,
+				08478DD92067C69D0015F09A /* MDDCompat.m */,
+				08478DE82067DAD90015F09A /* MDDCompat+Private.h */,
 				08AD795D20628DF3004122D2 /* MDDColumnConfiguration.h */,
 				08AD795920628DF3004122D2 /* MDDColumnConfiguration.m */,
 				08AD795F20628DF4004122D2 /* MDDTableInfo.h */,
 				08AD795A20628DF3004122D2 /* MDDTableInfo.m */,
+				08478DEA2067E8850015F09A /* MDDTableInfo+Private.h */,
 				08AD795720628DF3004122D2 /* MDDColumn.h */,
 				08AD796220628DF4004122D2 /* MDDColumn.m */,
 				08AD795820628DF3004122D2 /* MDDColumn+Private.h */,
 				08AD795C20628DF3004122D2 /* MDPropertyAttributes.h */,
 				08AD796420628DF4004122D2 /* MDPropertyAttributes.m */,
+				08478DEC2067F2330015F09A /* MDDLogger.h */,
+				08478DED2067F2330015F09A /* MDDLogger.m */,
 			);
 			path = Database;
 			sourceTree = "<group>";
@@ -398,10 +449,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				08AD798E20628DFD004122D2 /* MDDDescriptor+Private.h in Headers */,
+				08478DF22067F46C0015F09A /* MDDatabaseCenter.h in Headers */,
 				08AD796720628DF4004122D2 /* MDDObject.h in Headers */,
 				0850A3F22064CCE70022B36B /* MDDDeleter+Private.h in Headers */,
 				0850A3E22064CC060022B36B /* MDDSort+Private.h in Headers */,
-				08478DCD206769890015F09A /* MDDMacros.h in Headers */,
 				0850A3D02064C9330022B36B /* MDDFunctionQuery.h in Headers */,
 				0850A3EA2064CC4C0022B36B /* MDDUpdater+Private.h in Headers */,
 				0850A3E62064CC230022B36B /* MDDQuery+Private.h in Headers */,
@@ -409,15 +460,19 @@
 				08AD797120628DF4004122D2 /* MDDatabase+Private.h in Headers */,
 				0850A3CC2064C9080022B36B /* MDDDeleter.h in Headers */,
 				08AD796920628DF4004122D2 /* MDDColumn+Private.h in Headers */,
+				08478DDF2067CDB10015F09A /* MDDConfiguration+Private.h in Headers */,
 				0850A3EE2064CC7E0022B36B /* MDDInserter+Private.h in Headers */,
 				08AD798B20628DFD004122D2 /* MDDAccessorConstants.h in Headers */,
 				08AD796E20628DF4004122D2 /* MDDColumnConfiguration.h in Headers */,
 				0850A3AC2064C77D0022B36B /* MDDConditionSet.h in Headers */,
 				0850A3FC2064D1100022B36B /* MDDFunctionQuery+Private.h in Headers */,
+				08478DE92067DAD90015F09A /* MDDCompat+Private.h in Headers */,
 				0850A3D62064CB5F0022B36B /* MDDConditionSet+Private.h in Headers */,
+				08478DE32067CE730015F09A /* MDDMacros.h in Headers */,
 				0850A3C02064C8720022B36B /* MDDUpdater.h in Headers */,
 				0850A3C82064C8C40022B36B /* MDDInserter.h in Headers */,
 				0850A3F82064CFBB0022B36B /* MDDInsertSetter+Private.h in Headers */,
+				08478DEE2067F2330015F09A /* MDDLogger.h in Headers */,
 				0850A3A82064C73D0022B36B /* MDDCondition.h in Headers */,
 				0850A3B82064C8030022B36B /* MDDSort.h in Headers */,
 				0850A3B02064C7B30022B36B /* MDDCondition+MDDConditionSet.h in Headers */,
@@ -427,14 +482,18 @@
 				08AD796620628DF4004122D2 /* MDDatabase+Executing.h in Headers */,
 				08ECBFF820664E6F00FEA9AA /* MDDProcessor.h in Headers */,
 				0850A3C42064C8960022B36B /* MDDInsertSetter.h in Headers */,
+				08478DDD2067CAF10015F09A /* MDDErrorCode.h in Headers */,
 				0850A3BC2064C82A0022B36B /* MDDQuery.h in Headers */,
+				08478DE72067D3150015F09A /* MDDObject+Private.h in Headers */,
 				0850A3D32064CA540022B36B /* MDDKeyValueDescriptor+Private.h in Headers */,
 				08ECBFFB2066526E00FEA9AA /* MDDProcessor+Private.h in Headers */,
 				0850A3DA2064CB920022B36B /* MDDCondition+Private.h in Headers */,
 				08AD796F20628DF4004122D2 /* MDDatabase.h in Headers */,
 				08AD798720628DFD004122D2 /* MDDProcessor+MDDatabase.h in Headers */,
 				08AD798F20628DFD004122D2 /* MDDIndex.h in Headers */,
+				08478DDA2067C69D0015F09A /* MDDCompat.h in Headers */,
 				0850A3DE2064CBD00022B36B /* MDDSetter+Private.h in Headers */,
+				08478DEB2067E8850015F09A /* MDDTableInfo+Private.h in Headers */,
 				0850A4062064EB160022B36B /* MDObjectDatabase.h in Headers */,
 				08AD797020628DF4004122D2 /* MDDTableInfo.h in Headers */,
 				08AD798420628DFD004122D2 /* MDDDescriptor.h in Headers */,
@@ -442,6 +501,8 @@
 				0850A3B42064C7DB0022B36B /* MDDSetter.h in Headers */,
 				08F6BDF52063FEAE0073963E /* MDDRange.h in Headers */,
 				0850A3A42064C6DA0022B36B /* MDDKeyValueDescriptor.h in Headers */,
+				08478DD22067BF710015F09A /* MDDConfiguration.h in Headers */,
+				08478DF82067FB920015F09A /* MDDatabase+MDDAccessor.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -629,11 +690,14 @@
 				08AD798C20628DFD004122D2 /* MDDProcessor+MDDatabase.m in Sources */,
 				0850A3C92064C8C40022B36B /* MDDInserter.m in Sources */,
 				08AD797320628DF4004122D2 /* MDDColumn.m in Sources */,
+				08478DEF2067F2330015F09A /* MDDLogger.m in Sources */,
 				0850A3D72064CB5F0022B36B /* MDDConditionSet+Private.m in Sources */,
+				08478DE12067CE420015F09A /* MDDErrorCode.m in Sources */,
 				0850A3DB2064CB920022B36B /* MDDCondition+Private.m in Sources */,
 				0850A3A12064C6130022B36B /* MDDTokenDescription.m in Sources */,
 				0850A3AD2064C77D0022B36B /* MDDConditionSet.m in Sources */,
 				0850A3DF2064CBD00022B36B /* MDDSetter+Private.m in Sources */,
+				08478DF92067FB920015F09A /* MDDatabase+MDDAccessor.m in Sources */,
 				0850A3E32064CC060022B36B /* MDDSort+Private.m in Sources */,
 				08AD798620628DFD004122D2 /* MDDAccessorConstants.m in Sources */,
 				0850A3C12064C8720022B36B /* MDDUpdater.m in Sources */,
@@ -650,12 +714,16 @@
 				0850A3BD2064C82A0022B36B /* MDDQuery.m in Sources */,
 				08AD798D20628DFD004122D2 /* MDDDescriptor.m in Sources */,
 				0850A3E72064CC230022B36B /* MDDQuery+Private.m in Sources */,
+				08478DF32067F46C0015F09A /* MDDatabaseCenter.m in Sources */,
 				0850A3C52064C8960022B36B /* MDDInsertSetter.m in Sources */,
+				08478DE52067D30A0015F09A /* MDDObject.m in Sources */,
+				08478DDB2067C69D0015F09A /* MDDCompat.m in Sources */,
 				0850A3CD2064C9080022B36B /* MDDDeleter.m in Sources */,
 				0850A3EF2064CC7E0022B36B /* MDDInserter+Private.m in Sources */,
 				08AD797220628DF4004122D2 /* MDDatabase.m in Sources */,
 				08AD799020628DFD004122D2 /* MDDIndex.m in Sources */,
 				0850A3D12064C9330022B36B /* MDDFunctionQuery.m in Sources */,
+				08478DD32067BF710015F09A /* MDDConfiguration.m in Sources */,
 				08AD798920628DFD004122D2 /* MDDAccessor.m in Sources */,
 				0850A3EB2064CC4C0022B36B /* MDDUpdater+Private.m in Sources */,
 				08AD797420628DF4004122D2 /* MDDatabase+Executing.m in Sources */,

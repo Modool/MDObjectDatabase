@@ -41,11 +41,11 @@
     return [MDDTokenDescription descriptionWithTokenString:tokenString values:values];
 }
 
-+ (MDDTokenDescription *)descriptionWithObject:(id<MDDObject>)object tableInfo:(MDDTableInfo *)tableInfo;{
++ (MDDTokenDescription *)descriptionWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;{
     return [self descriptionWithObject:object properties:nil ignoredProperties:nil conditionSet:nil tableInfo:tableInfo];
 }
 
-+ (MDDTokenDescription *)descriptionWithObject:(id<MDDObject>)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;{
++ (MDDTokenDescription *)descriptionWithObject:(NSObject<MDDObject> *)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;{
     NSParameterAssert(tableInfo);
     
     MDDUpdater *updater = [self updaterWithObject:object properties:properties ignoredProperties:ignoredProperties conditionSet:conditionSet tableInfo:tableInfo];

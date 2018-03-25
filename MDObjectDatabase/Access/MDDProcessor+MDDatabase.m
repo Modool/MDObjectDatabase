@@ -18,8 +18,6 @@
 
 - (BOOL)executeInsertDescriptions:(NSArray<MDDTokenDescription *> *)descriptions block:(void (^)(NSUInteger index, NSUInteger rowID))block;{
     NSParameterAssert(descriptions && [descriptions count]);
-    [[self database] attachTableIfNeedsWithClass:[self modelClass]];
-    
     return [self executeInsert:^MDDTokenDescription *(NSUInteger index, BOOL *stop) {
         *stop = index >= (descriptions.count - 1);
         
@@ -47,8 +45,6 @@
 
 - (BOOL)executeUpdateDescription:(MDDTokenDescription *)description completion:(void (^)(FMDatabase *database))completion;{
     NSParameterAssert(description);
-    [[self database] attachTableIfNeedsWithClass:[self modelClass]];
-    
     return [[self database] executeUpdateSQL:[description tokenString] withArgumentsInArray:[description values] completion:completion];
 }
 
@@ -69,8 +65,6 @@
 
 - (BOOL)_executeUpdate:(MDDTokenDescription *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(BOOL state, FMDatabase *database, NSUInteger index, BOOL *stop))resultBlock;{
     NSParameterAssert(block);
-    [[self database] attachTableIfNeedsWithClass:[self modelClass]];
-    
     __block BOOL success = YES;
     [[self database] executeInTransaction:^(FMDatabase *database, BOOL *rollback) {
         @try {
@@ -80,8 +74,7 @@
             while (!stop && result) {
                 MDDTokenDescription *description = block(index, &stop);
                 index++;
-                
-                NSLog(@"Database will excute to update with SQL: %@ \nValues:%@", description.tokenString, description.values);
+        
                 if (!description) continue;
                 
                 NSArray *values = [description values];
@@ -91,7 +84,6 @@
                     result = [database executeUpdate:[description tokenString] withArgumentsInArray:values];
                 }
                 
-                NSLog(@"Database excute to update: %d \nSQL: %@ \nValues:%@", result, description.tokenString, description.values);
                 if (resultBlock) resultBlock(result, database, index - 1, &stop);
             }
         } @catch (NSException *exception) {
@@ -104,8 +96,6 @@
 
 - (void)executeQueryDescription:(MDDTokenDescription *)description block:(void (^)(NSDictionary *dictionary))block;{
     NSParameterAssert(description);
-    [[self database] attachTableIfNeedsWithClass:[self modelClass]];
-    
     [[self database] executeQuerySQL:[description tokenString] withArgumentsInArray:[description values] block:block];
 }
 
@@ -126,8 +116,6 @@
 
 - (BOOL)executeQuery:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block result:(void (^)(NSUInteger index, NSDictionary *dictionary, BOOL *stop))resultBlock;{
     NSParameterAssert(block && resultBlock);
-    [[self database] attachTableIfNeedsWithClass:[self modelClass]];
-    
     __block BOOL success = YES;
     [[self database] executeInTransaction:^(FMDatabase *database, BOOL *rollback) {
         @try {
@@ -139,8 +127,6 @@
                 
                 index++;
                 if (![SQL length]) continue;
-                
-                NSLog(@"Database excute to query with SQL: %@ \nValues:%@", SQL, values);
                 
                 FMResultSet *resultSet = nil;
                 if (!values || ![values count]) {

@@ -7,48 +7,33 @@
 //
 
 #import "MDDTableInfo.h"
+#import "MDDTableInfo+Private.h"
 
 #import "MDPropertyAttributes.h"
 
 #import "MDDColumn+Private.h"
 #import "MDDDescriptor+Private.h"
+#import "MDDConfiguration+Private.h"
 #import "MDDObject.h"
 #import "MDDIndex.h"
 #import "MDDConditionSet.h"
-
-@interface MDDTableInfo ()
-
-@property (nonatomic, copy, readonly) NSDictionary<NSString *, MDDColumn *> *columnMapping;
-
-@property (nonatomic, copy, readonly) NSDictionary<NSString *, MDDIndex *> *indexeMapping;
-
-@property (nonatomic, copy, readonly) NSDictionary<NSString *, NSString *> *propertyMapping;
-
-@end
+#import "MDDErrorCode.h"
 
 @implementation MDDTableInfo
 
-+ (instancetype)infoWithTableName:(NSString *)tableName class:(Class)class error:(NSError **)error;{
-    if (![class respondsToSelector:@selector(primaryProperty)] && ![class respondsToSelector:@selector(primaryProperties)]) {
-        if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Class %@ didn't respond selector %@ or %@", class, NSStringFromSelector(@selector(primaryProperty)), NSStringFromSelector(@selector(primaryProperties))]}];
-        return nil;
-    }
++ (instancetype)infoWithConfiguration:(MDDConfiguration *)configuration error:(NSError **)error;{
+    Class<MDDObject> class = [configuration objectClass];
+    NSString *tableName = [configuration tableName];
     
-    NSSet<NSString *> *primaryProperties = [class respondsToSelector:@selector(primaryProperties)] ? [class primaryProperties] : nil;
-    primaryProperties = [class respondsToSelector:@selector(primaryProperty)] ? ([class primaryProperty] ? [NSSet setWithObject:[class primaryProperty]] : nil) : primaryProperties;
+    NSSet<NSString *> *primaryProperties = [configuration primaryProperties] ?: [NSSet setWithObject:[configuration primaryProperty]];
     if (!primaryProperties || ![primaryProperties count]) {
-        if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"None of primary keys for table %@ of class %@", tableName, class]}];
+        if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeNonePrimaryKey userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"None of primary keys for table %@ of class %@", tableName, class]}];
         return nil;
     }
-    
-    BOOL respondAutoincrement = [class respondsToSelector:@selector(autoincrement)];
-    BOOL autoincrement = respondAutoincrement ? ([class autoincrement] && primaryProperties && [primaryProperties count] == 1) : NO;
-    
-    BOOL respondMapping = [class respondsToSelector:@selector(tableMapping)];
-    NSArray<MDPropertyAttributes *> *attributes = MDPropertyAttributesForClass(class, respondMapping);
-    NSDictionary *propertyMapping = nil;
-    if (respondMapping) {
-        propertyMapping = [class tableMapping];
+    BOOL autoincrement = [configuration autoincrement];
+    NSDictionary *propertyMapping = [configuration propertyMapper];
+    NSArray<MDPropertyAttributes *> *attributes = MDPropertyAttributesForClass(class, propertyMapping != nil);
+    if ([propertyMapping count]) {
         attributes = [self _attributes:attributes fitlerByPropertyNames:[propertyMapping allKeys]];
     } else {
         propertyMapping = [self _propertyMappingFromPropertyAttributes:attributes];
@@ -61,6 +46,8 @@
         BOOL primary = [primaryProperties containsObject:propertyName];
         
         MDDColumn *column = [MDDColumn columnWithName:columnName propertyName:propertyName primary:primary autoincrement:(primary && autoincrement) attribute:attribute];
+        column.configuration = configuration.columnConfigurations[propertyName];
+        
         if (!column) {
             if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to reference property %@ with column %@ for table %@ of class %@", propertyName, columnName, tableName, class]}];
             return nil;
@@ -69,14 +56,14 @@
         columnMapping[propertyName] = column;
     }
     
-    NSArray<MDDIndex *> *indexes = [class respondsToSelector:@selector(indexes)] ? [class indexes] : nil;
+    NSArray<MDDIndex *> *indexes = [configuration indexes];
     NSArray<NSString *> *indexNames = [indexes valueForKey:@"name"];
     NSDictionary *indexesMapping = [NSDictionary dictionaryWithObjects:indexes forKeys:indexNames];
     
     MDDTableInfo *info = [self new];
     
-    info->_class = class;
-    info->_tableName = tableName;
+    info->_objectClass = class;
+    info->_tableName = [tableName copy];
     info->_primaryProperties = [primaryProperties copy];
     
     info->_columnMapping = [columnMapping copy];

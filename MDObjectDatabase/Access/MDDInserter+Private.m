@@ -37,7 +37,7 @@
     return [MDDTokenDescription descriptionWithTokenString:tokenString values:values];
 }
 
-+ (MDDTokenDescription *)descriptionWithObject:(id<MDDObject>)object tableInfo:(MDDTableInfo *)tableInfo;{
++ (MDDTokenDescription *)descriptionWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;{
     MDDInserter *inserter = [self inserterWithObject:object tableInfo:tableInfo];
     NSParameterAssert(inserter);
     

@@ -21,7 +21,7 @@
 
 - (void)testPrimaryValue {
     MDDCondition *condition = [MDDCondition conditionWithPrimaryValue:@"123"];
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class]];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
     
     MDDTokenDescription *description = [MDDCondition descriptionWithConditions:@[condition] operation:MDDConditionOperationAnd tableInfo:tableInfo];
     XCTAssertNotNil(description);
@@ -31,7 +31,7 @@
 
 - (void)testKeyValue {
     MDDCondition *condition = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class]];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
     
     MDDTokenDescription *description = [MDDCondition descriptionWithConditions:@[condition] operation:MDDConditionOperationAnd tableInfo:tableInfo];
     XCTAssertNotNil(description);
@@ -50,7 +50,7 @@
     
     MDDConditionSet *set3 = [[set1 orSet:set2] or:condition3];
     
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class]];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
     
     MDDTokenDescription *description = [MDDConditionSet descriptionWithConditionSet:set3 tableInfo:tableInfo];
     XCTAssertNotNil(description);
@@ -68,7 +68,7 @@
     
     MDDConditionSet *set3 = [[set1 andSet:set2] and:condition3];
     
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class]];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
     
     MDDTokenDescription *description = [MDDConditionSet descriptionWithConditionSet:set3 tableInfo:tableInfo];
     XCTAssertNotNil(description);
@@ -87,7 +87,7 @@
     MDDConditionSet *set3 = [[set1 andSet:set2] and:condition3];
     XCTAssertEqual(set3.conditions.count, 4);
     
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class]];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
     
     MDDTokenDescription *description = [MDDConditionSet descriptionWithConditionSet:set3 tableInfo:tableInfo];
     XCTAssertNotNil(description);
@@ -107,7 +107,7 @@
     MDDConditionSet *set3 = [[set1 orSet:set2] or:condition3];
     XCTAssertEqual(set3.conditions.count, 4);
     
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class]];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
     
     MDDTokenDescription *description = [MDDConditionSet descriptionWithConditionSet:set3 tableInfo:tableInfo];
     XCTAssertNotNil(description);

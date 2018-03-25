@@ -9,8 +9,7 @@
 #import "MDDColumn.h"
 #import "MDDMacros.h"
 
-MDD_EXTERN NSString * const MDDObjectObjectIDName;
-
+@class MDDColumnConfiguration;
 @interface MDDColumn ()
 
 @property (nonatomic, copy) NSString *name;
@@ -25,4 +24,20 @@ MDD_EXTERN NSString * const MDDObjectObjectIDName;
 
 @property (nonatomic, strong) MDPropertyAttributes *attribute;
 
+@property (nonatomic, strong) MDDColumnConfiguration *configuration;
+
+- (BOOL)isEqualLocalColumn:(MDDLocalColumn *)localColumn;
+
 @end
+
+@class MDDTableInfo;
+@interface MDDLocalColumn ()
+
++ (instancetype)columnWithName:(NSString *)name primary:(BOOL)primary autoincrement:(BOOL)autoincrement type:(MDDColumnType)type;
+
++ (NSDictionary<NSString *, MDDLocalColumn *> *)columnsWithSQL:(NSString *)SQL tableInfo:(MDDTableInfo *)tableInfo;
+
+@end
+
+MDD_EXTERN MDDColumnType MDDColumnTypeFromDescription(NSString *description);
+MDD_EXTERN NSString *MDDColumnTypeDescription(MDDColumnType type);

@@ -40,4 +40,10 @@ typedef NS_ENUM(NSUInteger, MDDColumnType) {
 
 @end
 
-MDD_EXTERN MDDColumnType MDDColumnTypeDescription(MDPropertyAttributes *attribute);
+@interface MDDLocalColumn : MDDColumn
+
+@property (nonatomic, copy, readonly) NSString *propertyName NS_UNAVAILABLE;
+
+@end
+
+MDD_EXTERN MDDColumnType MDDColumnTypeFromAttribute(MDPropertyAttributes *attribute);

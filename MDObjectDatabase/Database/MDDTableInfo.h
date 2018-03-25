@@ -8,10 +8,10 @@
 
 #import "MDDObject.h"
 
-@class MDDColumn, MDDIndex, MDDConditionSet;
+@class MDDColumn, MDDIndex, MDDConditionSet, MDDConfiguration;
 @interface MDDTableInfo : NSObject
 
-@property (nonatomic, copy, readonly) Class class;
+@property (nonatomic, copy, readonly) Class objectClass;
 @property (nonatomic, copy, readonly) NSString *tableName;
 
 @property (nonatomic, copy, readonly) NSSet<NSString *> *primaryProperties;
@@ -22,7 +22,7 @@
 @property (nonatomic, copy, readonly) NSArray<NSString *> *indexNames;
 @property (nonatomic, copy, readonly) NSArray<MDDIndex *> *indexes;
 
-+ (instancetype)infoWithTableName:(NSString *)tableName class:(Class)class error:(NSError **)error;
++ (instancetype)infoWithConfiguration:(MDDConfiguration *)configuration error:(NSError **)error;
 
 - (MDDColumn *)columnForKey:(id)key;
 - (MDDIndex *)indexForKeys:(NSSet<NSString *> *)keys;

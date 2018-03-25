@@ -31,7 +31,9 @@
         _queueTag = &_queueTag;
         dispatch_queue_set_specific(queue, _queueTag, _queueTag, NULL);
         
-        [database attachTableIfNeedsWithClass:class];
+        NSError *error = nil;
+        _tableInfo = [database requireTableInfoWithClass:class error:&error];
+        NSAssert(_tableInfo && !error, [error description]);
     }
     return self;
 }
@@ -53,7 +55,7 @@
 }
 
 - (void)sync:(void (^)(id<MDDProcessor> processor))block;{
-    MDDProcessor *operator = [[MDDProcessor alloc] initWithClass:_modelClass database:_database];
+    MDDProcessor *operator = [[MDDProcessor alloc] initWithClass:_modelClass database:_database tableInfo:_tableInfo];
     
     [self _sync:^{
         block(operator);
@@ -61,7 +63,7 @@
 }
 
 - (void)async:(void (^)(id<MDDProcessor> processor))block;{
-    MDDProcessor *operator = [[MDDProcessor alloc] initWithClass:_modelClass database:_database];
+    MDDProcessor *operator = [[MDDProcessor alloc] initWithClass:_modelClass database:_database tableInfo:_tableInfo];
     
     [self _async:^{
         block(operator);

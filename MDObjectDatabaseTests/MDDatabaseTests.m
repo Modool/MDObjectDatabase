@@ -24,7 +24,7 @@
 - (void)setUp{
     [super setUp];
     _queue = dispatch_queue_create("com.modool.database", NULL);
-    _accessor = [[MDDAccessor alloc] initWithClass:[MDDTestClass class] database:[MDDatabaseTestsGlobal database] queue:_queue];
+    _accessor = [[MDDatabaseTestsGlobal database] accessorForClass:[MDDTestClass class] queue:_queue];;
 }
 
 - (void)testInsertObjectAsynchronize {

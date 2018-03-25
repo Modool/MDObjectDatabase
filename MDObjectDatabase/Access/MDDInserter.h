@@ -19,7 +19,7 @@
 + (instancetype)inserterWithSetter:(NSArray<MDDInsertSetter *> *)setters;
 + (instancetype)inserterWithSetter:(NSArray<MDDInsertSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;
 
-+ (instancetype)inserterWithObject:(id<MDDObject>)object tableInfo:(MDDTableInfo *)tableInfo;
++ (instancetype)inserterWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;
 
 @end
 

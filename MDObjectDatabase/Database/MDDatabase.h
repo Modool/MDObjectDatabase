@@ -8,18 +8,19 @@
 
 #import <Foundation/Foundation.h>
 
-@class MDDTableInfo;
 @protocol MDDObject;
+@class MDDTableInfo, MDDConfiguration, MDDCompat;
 @interface MDDatabase : NSObject
 
+@property (nonatomic, copy, readonly) NSString *filepath;
+
 + (instancetype)databaseWithFilepath:(NSString *)filepath;
+- (instancetype)initWithFilepath:(NSString *)filepath;
 
-- (void)attachTableIfNeedsWithClass:(Class<MDDObject>)class;
-
-- (BOOL)containedTableWithClass:(Class<MDDObject>)class;
-
-- (MDDTableInfo *)requireTableInfoWithClass:(Class<MDDObject>)class;
-
+- (MDDTableInfo *)requireTableInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;
+- (BOOL)existTableForClass:(Class<MDDObject>)class;
 - (void)close;
+
+- (MDDCompat *)addConfiguration:(MDDConfiguration *)configuration error:(NSError **)error;
 
 @end

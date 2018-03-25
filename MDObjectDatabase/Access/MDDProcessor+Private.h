@@ -12,9 +12,10 @@
 @interface MDDProcessor : NSObject<MDDProcessor>
 
 @property (nonatomic, strong, readonly) MDDatabase *database;
+@property (nonatomic, strong, readonly) MDDTableInfo *tableInfo;
 @property (nonatomic, strong, readonly) Class<MDDObject> modelClass;
 
-- (instancetype)initWithClass:(Class<MDDObject>)class database:(MDDatabase *)database;
+- (instancetype)initWithClass:(Class<MDDObject>)class database:(MDDatabase *)database tableInfo:(MDDTableInfo *)tableInfo;
 
 @end
 

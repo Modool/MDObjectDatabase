@@ -7,9 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-
-#import "MDDObject.h"
-#import "MDDatabase.h"
+#import <MDObjectDatabase/MDObjectDatabase.h>
 
 @interface MDDTestClass : NSObject <MDDObject>
 

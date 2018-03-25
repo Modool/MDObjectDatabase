@@ -25,15 +25,15 @@
     return descriptor;
 }
 
-+ (instancetype)updaterWithObject:(id<MDDObject>)object tableInfo:(MDDTableInfo *)tableInfo;{
++ (instancetype)updaterWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;{
     return [self updaterWithObject:object properties:nil ignoredProperties:nil conditionSet:nil tableInfo:tableInfo];
 }
 
-+ (instancetype)updaterWithObject:(id<MDDObject>)object properties:(NSSet *)properties tableInfo:(MDDTableInfo *)tableInfo;{
++ (instancetype)updaterWithObject:(NSObject<MDDObject> *)object properties:(NSSet *)properties tableInfo:(MDDTableInfo *)tableInfo;{
     return [self updaterWithObject:object properties:properties ignoredProperties:nil conditionSet:nil tableInfo:tableInfo];
 }
 
-+ (instancetype)updaterWithObject:(id<MDDObject>)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;{
++ (instancetype)updaterWithObject:(NSObject<MDDObject> *)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;{
     
     NSArray<MDDSetter *> *setters = [MDDSetter settersWithModel:object properties:properties ignoredProperties:ignoredProperties tableInfo:tableInfo];
     NSParameterAssert(setters && [setters count]);

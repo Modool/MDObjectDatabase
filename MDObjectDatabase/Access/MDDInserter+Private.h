@@ -14,6 +14,6 @@
 
 + (MDDTokenDescription *)descriptionWithInserter:(MDDInserter *)inserter tableInfo:(MDDTableInfo *)tableInfo;
 
-+ (MDDTokenDescription *)descriptionWithObject:(id<MDDObject>)object tableInfo:(MDDTableInfo *)tableInfo;
++ (MDDTokenDescription *)descriptionWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;
 
 @end

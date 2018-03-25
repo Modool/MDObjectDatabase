@@ -31,7 +31,7 @@
     return [NSString stringWithFormat:@" INSERT INTO %@ ", [tableInfo tableName]];
 }
 
-+ (MDDInserter *)inserterWithObject:(id<MDDObject>)object tableInfo:(MDDTableInfo *)tableInfo;{
++ (MDDInserter *)inserterWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;{
     NSParameterAssert(object && tableInfo);
     
     NSArray<MDDInsertSetter *> *setters = [MDDInsertSetter settersWithModel:object tableInfo:tableInfo];
