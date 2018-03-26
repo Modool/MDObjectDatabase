@@ -11,11 +11,11 @@
 
 @implementation MDDFunctionQuery
 
-+ (instancetype)functionQueryWithFunction:(NSString *)function conditionSet:(MDDConditionSet *)conditionSet;{
++ (instancetype)functionQueryWithFunction:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;{
     return [self functionQueryWithKey:nil function:function conditionSet:conditionSet];
 }
 
-+ (instancetype)functionQueryWithKey:(NSString *)key function:(NSString *)function conditionSet:(MDDConditionSet *)conditionSet;{
++ (instancetype)functionQueryWithKey:(NSString *)key function:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;{
     MDDFunctionQuery *query = [[self alloc] init];
     query->_key = [key copy];
     query->_function = [function copy];

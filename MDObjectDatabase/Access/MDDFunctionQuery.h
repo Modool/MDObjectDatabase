@@ -7,16 +7,17 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "MDDAccessorConstants.h"
 
 @class MDDConditionSet;
 @interface MDDFunctionQuery : NSObject
 
 @property (nonatomic, copy, readonly) NSString *key;
-@property (nonatomic, copy, readonly) NSString *function;
+@property (nonatomic, copy, readonly) MDDFunction function;
 @property (nonatomic, strong, readonly) MDDConditionSet *conditionSet;
 
-+ (instancetype)functionQueryWithFunction:(NSString *)function conditionSet:(MDDConditionSet *)conditionSet;
-+ (instancetype)functionQueryWithKey:(NSString *)key function:(NSString *)function conditionSet:(MDDConditionSet *)conditionSet;
++ (instancetype)functionQueryWithFunction:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;
++ (instancetype)functionQueryWithKey:(NSString *)key function:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;
 
 + (instancetype)sumQueryWithConditionSet:(MDDConditionSet *)conditionSet;
 + (instancetype)sumQueryWithKey:(NSString *)key conditionSet:(MDDConditionSet *)conditionSet;
