@@ -7,7 +7,7 @@
 //
 
 #import "MDDKeyValueDescriptor.h"
-#import "MDDAccessorConstants.h"
+#import "MDDConstants.h"
 
 @protocol MDDObject;
 @class MDDTableInfo;
@@ -17,11 +17,13 @@
 
 @property (nonatomic, assign, readonly) MDDOperation operation;
 
-+ (instancetype)setterWithKey:(NSString *)key value:(id<NSObject, NSCopying>)value;
-+ (instancetype)setterWithKey:(NSString *)key value:(id<NSObject, NSCopying>)value operation:(MDDOperation)operation;
-+ (instancetype)setterWithKey:(NSString *)key value:(id<NSObject, NSCopying>)value transform:(NSString *)transform operation:(MDDOperation)operation;
++ (instancetype)setterWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key value:(id<NSObject, NSCopying>)value;
++ (instancetype)setterWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key value:(id<NSObject, NSCopying>)value operation:(MDDOperation)operation;
++ (instancetype)setterWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key value:(id<NSObject, NSCopying>)value transform:(NSString *)transform operation:(MDDOperation)operation;
 
-+ (NSArray<MDDSetter *> *)settersWithModel:(NSObject<MDDObject> *)model tableInfo:(MDDTableInfo *)tableInfo;
-+ (NSArray<MDDSetter *> *)settersWithModel:(NSObject<MDDObject> *)model properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties tableInfo:(MDDTableInfo *)tableInfo;
++ (NSArray<MDDSetter *> *)settersWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;
++ (NSArray<MDDSetter *> *)settersWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties tableInfo:(MDDTableInfo *)tableInfo;
+
++ (MDDDescription *)descriptionWithSetters:(NSArray<MDDSetter *> *)setters;
 
 @end

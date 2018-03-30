@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
+@protocol MDDReferenceDatabaseQueue;
 @class MDDLogger, MDDatabase;
 @interface MDDatabaseCenter : NSObject
 
@@ -17,6 +18,6 @@
 
 + (MDDatabaseCenter *)defaultCenter;
 
-- (MDDatabase *)requrieDatabaseWithFilepath:(NSString *)filepath;
+- (MDDatabase *)requrieDatabaseWithDatabaseQueue:(id<MDDReferenceDatabaseQueue>)queue;
 
 @end

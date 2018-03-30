@@ -105,6 +105,21 @@
 
 @implementation MDPropertyAttributes
 
+- (NSUInteger)hash{
+    return [[self name] hash] ^ [[self objectClass] hash] ^ [[self type] hash] ^ [[self typeString] hash];
+}
+
+- (BOOL)isEqual:(MDPropertyAttributes *)object{
+    if ([super isEqual:object]) return YES;
+    if (![object isKindOfClass:[MDPropertyAttributes class]]) return NO;
+    
+    return [[self name] isEqual:[object name]];
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"name", @"readonly", @"nonatomic", @"weak", @"canBeCollected", @"dynamic", @"memoryManagementPolicy", @"getter", @"setter", @"ivar", @"objectClass", @"type"]] description];
+}
+
 @end
 
 MDPropertyAttributes *MDCopyPropertyAttributes (objc_property_t property) {
@@ -133,7 +148,7 @@ MDPropertyAttributes *MDCopyPropertyAttributes (objc_property_t property) {
     }
 
     // allocate enough space for the structure and the type string (plus a NUL)
-    MDPropertyAttributes *attributes = [MDPropertyAttributes new];
+    MDPropertyAttributes *attributes = [[MDPropertyAttributes alloc] init];
     if (!attributes) {
         fprintf(stderr, "ERROR: Could not allocate MDPropertyAttributes structure for attribute string \"%s\" for property %s\n", attrString, property_getName(property));
         return nil;
@@ -325,7 +340,7 @@ NSArray<MDPropertyAttributes *> *MDPropertyAttributesForCurrentClass(Class<NSObj
     unsigned int count = 0;
     objc_property_t *properties = class_copyPropertyList(class, &count);
     
-    NSMutableArray<MDPropertyAttributes *> *resultProperties = [NSMutableArray<MDPropertyAttributes *> new];
+    NSMutableArray<MDPropertyAttributes *> *resultProperties = [NSMutableArray<MDPropertyAttributes *> array];
     for (int i = 0; i < count; i++) {
         objc_property_t property = properties[i];
         MDPropertyAttributes *resultProperty = MDCopyPropertyAttributes(property);
@@ -342,7 +357,7 @@ NSArray<MDPropertyAttributes *> *MDPropertyAttributesForCurrentClass(Class<NSObj
 NSArray<MDPropertyAttributes *> *MDPropertyAttributesForClass(Class<NSObject> class, BOOL containedSuperClass){
     if (!containedSuperClass) return MDPropertyAttributesForCurrentClass(class);
     
-    NSMutableArray<MDPropertyAttributes *> *resultProperties = [NSMutableArray<MDPropertyAttributes *> new];
+    NSMutableArray<MDPropertyAttributes *> *resultProperties = [NSMutableArray<MDPropertyAttributes *> array];
     Class currentClass = class;
     do {
         NSArray<MDPropertyAttributes *> *properties = MDPropertyAttributesForCurrentClass(currentClass);
@@ -353,3 +368,18 @@ NSArray<MDPropertyAttributes *> *MDPropertyAttributesForClass(Class<NSObject> cl
     
     return [resultProperties copy];
 }
+
+NSArray<MDPropertyAttributes *> *MDPropertyAttributesNamed(Class<NSObject> class, NSArray<NSString *> *names){
+    NSMutableArray<MDPropertyAttributes *> *attributes = [NSMutableArray array];
+    for (NSString *name in names) {
+        objc_property_t property = class_getProperty(class, [name UTF8String]);
+        if (!property) continue;
+        
+        MDPropertyAttributes *attribute = MDCopyPropertyAttributes(property);
+        if (!attribute) continue;
+        
+        [attributes addObject:attribute];
+    }
+    return [attributes copy];
+}
+

@@ -45,7 +45,7 @@ const NSUInteger MDDIndexMaximumPropertyNumber = 6;
 
 + (instancetype)indexWithName:(NSString *)name propertyName:(NSString *)propertyName unique:(BOOL)unique;{
     NSParameterAssert([name length] && [propertyName length]);
-    MDDIndex *index = [self new];
+    MDDIndex *index = [[self alloc] init];
     index->_name = [name copy];
     index->_propertyNames = [NSSet setWithObject:propertyName];
     index->_unique = unique;
@@ -59,7 +59,7 @@ const NSUInteger MDDIndexMaximumPropertyNumber = 6;
 
 + (instancetype)indexWithName:(NSString *)name propertyNames:(NSSet<NSString *> *)propertyNames;{
     NSParameterAssert([name length] && [propertyNames count] && [propertyNames count] <= MDDIndexMaximumPropertyNumber);
-    MDDIndex *index = [self new];
+    MDDIndex *index = [[self alloc] init];
     index->_name = [name copy];
     index->_propertyNames = [propertyNames copy];
     
@@ -71,7 +71,7 @@ const NSUInteger MDDIndexMaximumPropertyNumber = 6;
         _tableInfo = tableInfo;
         _tableName = [tableInfo tableName];
         
-        NSMutableArray<NSString *> *columnNames = [NSMutableArray new];
+        NSMutableArray<NSString *> *columnNames = [NSMutableArray array];
         for (NSString *propertyName in _propertyNames) {
             MDDColumn *column = [tableInfo columnForKey:propertyName];
             [columnNames addObject:[column name]];
@@ -82,6 +82,10 @@ const NSUInteger MDDIndexMaximumPropertyNumber = 6;
         //    @"CREATE %@ INDEX %@ on %@ (%@)"
         _creatingSQL = [NSString stringWithFormat:MDDatabaseCreateIndexSQL, _unique ? @"UNIQUE" : @"", _name, [tableInfo tableName], [columnNames componentsJoinedByString:@", "]];
     }
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"tableName", @"columnNames", @"creatingSQL"]] description];
 }
 
 @end
@@ -103,7 +107,7 @@ const NSUInteger MDDIndexMaximumPropertyNumber = 6;
 
 + (instancetype)indexWithName:(NSString *)name tableName:(NSString *)tableName SQL:(NSString *)SQL;{
     NSParameterAssert([name length] && [tableName length] && [SQL length]);
-    MDDLocalIndex *index = [self new];
+    MDDLocalIndex *index = [[self alloc] init];
     index->_name = [name copy];
     index->_tableName = [tableName copy];
     index->_SQL = [SQL copy];
@@ -116,6 +120,10 @@ const NSUInteger MDDIndexMaximumPropertyNumber = 6;
         _droppingSQL = [NSString stringWithFormat:MDDatabaseDropIndexSQL, _name];
     }
     return _droppingSQL;
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"tableName", @"columnNames", @"creatingSQL", @"droppingSQL"]] description];
 }
 
 @end

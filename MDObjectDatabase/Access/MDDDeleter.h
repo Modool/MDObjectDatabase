@@ -13,8 +13,8 @@
 
 @property (nonatomic, strong, readonly) MDDConditionSet *conditionSet;
 
-+ (instancetype)deleter;
-+ (instancetype)deleterWithConditionSet:(MDDConditionSet *)conditionSet;
++ (instancetype)deleterWithTableInfo:(MDDTableInfo *)tableInfo;
++ (instancetype)deleterWithTableInfo:(MDDTableInfo *)tableInfo conditionSet:(MDDConditionSet *)conditionSet;
 
 @end
 

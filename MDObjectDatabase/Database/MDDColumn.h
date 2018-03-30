@@ -13,8 +13,7 @@ typedef NS_ENUM(NSUInteger, MDDColumnType) {
     MDDColumnTypeText,
     MDDColumnTypeInteger,
     MDDColumnTypeFloat,
-    MDDColumnTypeDouble,
-    MDDColumnTypeBoolean,
+    MDDColumnTypeData,
 };
 
 @class MDPropertyAttributes;

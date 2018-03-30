@@ -1,16 +1,18 @@
 //
 //  MDDQuery+Private.h
-//  MDDatabase
+//  MDObjectDatabase
 //
-//  Created by xulinfeng on 2018/3/23.
+//  Created by xulinfeng on 2018/3/27.
 //  Copyright © 2018年 markejave. All rights reserved.
 //
 
 #import "MDDQuery.h"
 
-@class MDDTokenDescription, MDDTableInfo;
-@interface MDDQuery (Private)
+@interface MDDQuery ()
 
-+ (MDDTokenDescription *)descriptionWithQuery:(MDDQuery *)query range:(NSRange)range tableInfo:(MDDTableInfo *)tableInfo;
+@property (nonatomic, copy, readonly) id (^transform)(NSDictionary *result);
+
+- (id)transformValue:(NSDictionary *)value;
 
 @end
+

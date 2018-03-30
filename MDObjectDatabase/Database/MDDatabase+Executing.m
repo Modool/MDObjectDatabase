@@ -6,20 +6,20 @@
 //  Copyright © 2017年 modool. All rights reserved.
 //
 
-#import <FMDB/FMDB.h>
 #import "MDDatabase+Executing.h"
 #import "MDDatabase+Private.h"
+#import "MDDReferenceDatabase.h"
 
 @implementation MDDatabase (Executing)
 
-- (void)executeInTransaction:(void (^)(FMDatabase *db, BOOL *rollback))block {
+- (void)executeInTransaction:(void (^)(id<MDDReferenceDatabase> database, BOOL *rollback))block {
     [[self lock] lock];
-    [[self databaseQueue] inTransaction:^(FMDatabase *db, BOOL *rollback) {
-        db.logsErrors = YES;
+    [[self databaseQueue] inTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
+        database.logsErrors = YES;
         
         self.inTransaction = YES;
         
-        if (block) block(db, rollback);
+        if (block) block(database, rollback);
         
         self.inTransaction = NO;
     }];
@@ -31,14 +31,14 @@
 }
 
 - (BOOL)executeUpdateSQL:(NSString *)SQL withArgumentsInArray:(NSArray *)arguments;{
-    return [self executeUpdateSQL:SQL withArgumentsInArray:arguments completion:nil];
+    return [self executeUpdateSQL:SQL withArgumentsInArray:arguments block:nil];
 }
 
-- (BOOL)executeUpdateSQL:(NSString *)SQL withArgumentsInArray:(NSArray *)arguments completion:(void (^)(FMDatabase *database))completion;{
+- (BOOL)executeUpdateSQL:(NSString *)SQL withArgumentsInArray:(NSArray *)arguments block:(void (^)(id<MDDReferenceDatabase> database))block;{
     NSParameterAssert([SQL length]);
     __block BOOL result = NO;
     [[self lock] lock];
-    [[self databaseQueue] inDatabase:^(FMDatabase *database) {
+    [[self databaseQueue] inDatabase:^(id<MDDReferenceDatabase> database) {
         database.logsErrors = YES;
         
         if (!arguments || ![arguments count]) {
@@ -46,7 +46,7 @@
         } else {
             result = [database executeUpdate:SQL withArgumentsInArray:arguments];
         }
-        if (completion) completion(database);
+        if (block) block(database);
     }];
     [[self lock] unlock];
     
@@ -61,10 +61,10 @@
     NSParameterAssert([SQL length]);
     
     [[self lock] lock];
-    [[self databaseQueue] inDatabase:^(FMDatabase *database) {
+    [[self databaseQueue] inDatabase:^(id<MDDReferenceDatabase> database) {
         database.logsErrors = YES;
 
-        FMResultSet *resultSet = nil;
+        id<MDDReferenceDatabaseResultSet> resultSet = nil;
         if (!arguments || ![arguments count]) {
             resultSet = [database executeQuery:SQL];
         } else {

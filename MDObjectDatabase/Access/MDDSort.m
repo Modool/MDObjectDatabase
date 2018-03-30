@@ -8,32 +8,33 @@
 //
 
 #import "MDDSort.h"
-#import "MDDDescriptor+Private.h"
-
 #import "MDDTableInfo.h"
 #import "MDDColumn.h"
-#import "MDDTokenDescription.h"
+#import "MDDDescription.h"
 
 @implementation MDDSort
 
-+ (instancetype)sortWithKey:(NSString *)key ascending:(BOOL)ascending;{
-    return [[self alloc] initWithKey:key ascending:ascending];
-}
-
-- (instancetype)initWithKey:(NSString *)key ascending:(BOOL)ascending;{
-    if (self = [super initWithKey:key value:nil]) {
-        _ascending = ascending;
-    }
-    return self;
-}
-
-- (NSString *)descriptionWithTableInfo:(MDDTableInfo *)tableInfo value:(id *)value{
-    NSParameterAssert(tableInfo);
++ (instancetype)sortWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key ascending:(BOOL)ascending;{
+    MDDSort *sort = [super descriptorWithTableInfo:tableInfo key:key value:nil];
+    sort->_ascending = ascending;
     
-    MDDColumn *column = [tableInfo columnForKey:[self key]];
+    return sort;
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"key", @"ascending"]] description];
+}
+
+- (MDDDescription *)SQLDescription{
+    MDDColumn *column = [self.tableInfo columnForKey:[self key]];
     NSParameterAssert(column);
     
-    return [NSString stringWithFormat:@"%@ %@", [column name], [self ascending] ? @"ASC" : @"DESC"];
+    NSString *SQL = [NSString stringWithFormat:@"%@ %@", [column name], [self ascending] ? @"ASC" : @"DESC"];
+    return [MDDDescription descriptionWithSQL:SQL values:nil];
+}
+
++ (MDDDescription *)descriptionWithSorts:(NSArray<MDDSort *> *)sorts{
+    return [super descriptionWithDescriptors:sorts separator:@" , "];
 }
 
 @end

@@ -19,9 +19,9 @@
 + (instancetype)updaterWithSetter:(NSArray<MDDSetter *> *)setters;
 + (instancetype)updaterWithSetter:(NSArray<MDDSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;
 
-+ (instancetype)updaterWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;
-+ (instancetype)updaterWithObject:(NSObject<MDDObject> *)object properties:(NSSet *)properties tableInfo:(MDDTableInfo *)tableInfo;
-+ (instancetype)updaterWithObject:(NSObject<MDDObject> *)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;
++ (instancetype)updaterWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;
++ (instancetype)updaterWithObject:(id)object properties:(NSSet *)properties tableInfo:(MDDTableInfo *)tableInfo;
++ (instancetype)updaterWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;
 
 @end
 

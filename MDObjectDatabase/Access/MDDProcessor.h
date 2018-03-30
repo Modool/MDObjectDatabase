@@ -8,34 +8,38 @@
 
 #import <Foundation/Foundation.h>
 #import "MDDRange.h"
-#import "MDDAccessorConstants.h"
+#import "MDDConstants.h"
 
-@protocol MDDObject;
-@class MDDatabase, MDDConditionSet, MDDSetter, MDDSort, MDDQuery, MDDFunctionQuery, MDDTokenDescription;
+@protocol MDDObject, MDDReferenceDatabase;
+@class MDDatabase, MDDTableInfo, MDDConditionSet, MDDSetter, MDDSort, MDDQuery, MDDFunctionQuery, MDDDescriptor, MDDInserter, MDDUpdater, MDDQuery, MDDDeleter;
 
 @protocol MDDProcessor <NSObject>
 
-#pragma mark - Append
-- (BOOL)insertWithObject:(NSObject<MDDObject> *)object;
-- (BOOL)insertWithObjects:(NSArray<MDDObject> *)objects;
+@property (nonatomic, strong, readonly) MDDTableInfo *tableInfo;
 
-- (BOOL)insertWithObjectsWithBlock:(NSObject<MDDObject> *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))result;
+- (MDDTableInfo *)tableInfoForClass:(Class<MDDObject>)class;
+
+#pragma mark - Append
+- (BOOL)insertWithObject:(id)object;
+- (BOOL)insertWithObjects:(NSArray *)objects;
+
+- (BOOL)insertWithObjectsWithBlock:(id(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))resultBlock;
 
 #pragma mark - Update
 
-- (BOOL)updateWithObject:(NSObject<MDDObject> *)object;
-- (BOOL)updateWithObject:(NSObject<MDDObject> *)object properties:(NSSet<NSString *> *)properties;
-- (BOOL)updateWithObject:(NSObject<MDDObject> *)object properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties;
-- (BOOL)updateWithObject:(NSObject<MDDObject> *)object properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet;
+- (BOOL)updateWithObject:(id)object;
+- (BOOL)updateWithObject:(id)object properties:(NSSet<NSString *> *)properties;
+- (BOOL)updateWithObject:(id)object properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties;
+- (BOOL)updateWithObject:(id)object properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet;
 
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects;
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects properties:(NSSet<NSString *> *)properties;
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties;
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet;
+- (BOOL)updateWithObjects:(NSArray *)objects;
+- (BOOL)updateWithObjects:(NSArray *)objects properties:(NSSet<NSString *> *)properties;
+- (BOOL)updateWithObjects:(NSArray *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties;
+- (BOOL)updateWithObjects:(NSArray *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet;
 
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionKeys:(NSSet<NSString *> *)conditionKeys;
+- (BOOL)updateWithObjects:(NSArray *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionKeys:(NSSet<NSString *> *)conditionKeys;
 
-- (BOOL)updateWithObjectsWithBlock:(NSObject<MDDObject> *(^)(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop))block result:(void (^)(BOOL state, NSUInteger index, BOOL *stop))result;
+- (BOOL)updateWithObjectsWithBlock:(id(^)(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop))block result:(void (^)(BOOL state, NSUInteger index, BOOL *stop))result;
 
 - (BOOL)updateWithPrimaryValue:(id)primaryValue key:(NSString *)key value:(id)value;
 - (BOOL)updateWithPrimaryValue:(id)primaryValue key:(NSString *)key value:(id)value operation:(MDDOperation)operation;
@@ -94,37 +98,31 @@
 - (NSArray *)queryWithConditionSet:(MDDConditionSet *)conditionSet range:(NSRange)range orderByKey:(NSString *)orderKey ascending:(BOOL)ascending;
 - (NSArray *)queryWithConditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;
 
-- (NSArray *)queryWithClass:(Class<MDDObject>)class conditionSet:(MDDConditionSet *)conditionSet;
-- (NSArray *)queryWithClass:(Class<MDDObject>)class conditionSet:(MDDConditionSet *)conditionSet range:(NSRange)range;
-- (NSArray *)queryWithClass:(Class<MDDObject>)class conditionSet:(MDDConditionSet *)conditionSet range:(NSRange)range orderByKey:(NSString *)orderKey ascending:(BOOL)ascending;
-- (NSArray *)queryWithClass:(Class<MDDObject>)class conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;
-
-- (BOOL)queryWithBlock:(MDDQuery *(^)(NSRange *range, NSUInteger index, BOOL *stop))block result:(void (^)(NSObject<MDDObject> * object))result;
-- (BOOL)queryWithClass:(Class<MDDObject>)class block:(MDDQuery *(^)(NSRange *range, NSUInteger index, BOOL *stop))block result:(void (^)(NSObject<MDDObject> * object))resultBlock;
-
 - (NSUInteger)queryCountWithKey:(NSString *)key value:(id)value;
 - (NSUInteger)queryCountWithConditionSet:(MDDConditionSet *)conditionSet;
 - (NSUInteger)queryCountWithKey:(NSString *)key conditionSet:(MDDConditionSet *)conditionSet;
-- (id)queryWithKey:(NSString *)key function:(MDDFunction)fuction conditionSet:(MDDConditionSet *)conditionSet;
-
-- (BOOL)functionQueries:(MDDFunctionQuery *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(NSUInteger index, id value))resultBlock;
+- (id)queryWithKey:(NSString *)key function:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;
 
 @end
 
 @protocol MDDCoreProcessor <NSObject>
 
-- (BOOL)executeInsertDescription:(MDDTokenDescription *)description completion:(void (^)(NSUInteger rowID))completion;
-- (BOOL)executeInsertDescriptions:(NSArray<MDDTokenDescription *> *)descriptions block:(void (^)(NSUInteger index, NSUInteger rowID))block;
-- (BOOL)executeInsert:(MDDTokenDescription *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))resultBlock;
+- (BOOL)executeInserter:(MDDInserter *)inserter block:(void (^)(NSUInteger rowID))block;
+- (BOOL)executeInserters:(MDDInserter *(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))resultBlock;
 
-- (BOOL)executeUpdateDescription:(MDDTokenDescription *)description;
-- (BOOL)executeUpdateDescriptions:(NSArray<MDDTokenDescription *> *)descriptions;
-- (BOOL)executeUpdate:(MDDTokenDescription *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(BOOL state, NSUInteger index, BOOL *stop))resultBlock;
+- (BOOL)executeDeleter:(MDDDeleter *)deleter;
+- (BOOL)executeDeleters:(MDDDeleter *(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, NSUInteger index, BOOL *stop))resultBlock;
 
-- (void)executeQueryDescription:(MDDTokenDescription *)description block:(void (^)(NSDictionary *dictionary))block;
-- (BOOL)executeQueryDescription:(MDDTokenDescription *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(NSUInteger index, NSDictionary *dictionary, BOOL *stop))resultBlock;
+- (BOOL)executeUpdater:(MDDUpdater *)updater;
+- (BOOL)executeUpdaters:(MDDUpdater *(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, NSUInteger index, BOOL *stop))resultBlock;
 
-- (void)executeQuery:(NSString *)query values:(NSArray *)values block:(void (^)(NSDictionary *dictionary))block;
-- (BOOL)executeQuery:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block result:(void (^)(NSUInteger index, NSDictionary *dictionary, BOOL *stop))resultBlock;
+- (void)executeQuery:(MDDQuery *)query block:(void (^)(id result))block;
+- (BOOL)executeQueries:(MDDQuery *(^)(NSUInteger index, BOOL *stop))block block:(void (^)(NSUInteger index, id result, BOOL *stop))resultBlock;
+
+- (void)executeQuerySQL:(NSString *)SQL values:(NSArray *)values block:(void (^)(NSDictionary *dictionary))block;
+- (BOOL)executeQuerySQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block result:(void (^)(NSUInteger index, NSDictionary *dictionary, BOOL *stop))resultBlock;
+
+- (BOOL)executeUpdateSQL:(NSString *)query values:(NSArray *)values block:(void (^)(id<MDDReferenceDatabase> database))block;
+- (BOOL)executeUpdateSQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block block:(void (^)(BOOL state, id<MDDReferenceDatabase>  database, NSUInteger index, BOOL *stop))resultBlock;
 
 @end

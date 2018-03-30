@@ -6,12 +6,17 @@
 //  Copyright © 2018年 markejave. All rights reserved.
 //
 
+#import "FMDB+MDDReferenceDatabase.h"
 #import "MDDatabaseTestsGlobal.h"
 
-@implementation MDDTestClass
+@implementation MDBaseClass
+
++ (NSDictionary *)tableMapper{
+    return @{};
+}
 
 + (instancetype)objectWithDictionary:(NSDictionary *)dictionary;{
-    NSDictionary *mapper = [self tableMapping];
+    NSDictionary *mapper = [self tableMapper];
     
     NSMutableDictionary *result = [dictionary ?: @{} mutableCopy];
     [dictionary enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
@@ -30,25 +35,25 @@
     return self;
 }
 
-+ (BOOL)autoincrement{
-    return YES;
-}
+@end
 
-+ (NSString *)tableName{
-    return NSStringFromClass(self.class);
-}
+@implementation MDDTestClass
 
-+ (NSString *)primaryProperty{
-    return NSStringFromSelector(@selector(objectID));
-}
-
-+ (NSDictionary *)tableMapping{
++ (NSDictionary *)tableMapper{
     return @{@"objectID": @"id",
              @"text": @"text",
              @"integerValue": @"integer_value",
              @"floatValue": @"float_value",
              @"boolValue": @"bool_value"};
 }
+
+@end
+
+@implementation MDDUser
+
+@end
+
+@implementation MDDGrade
 
 @end
 
@@ -60,23 +65,24 @@
     dispatch_once(&onceToken, ^{
         NSString *folder = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
         NSString *filepath = [folder stringByAppendingPathComponent:@"test.db"];
-        database = [[MDDatabaseCenter defaultCenter] requrieDatabaseWithFilepath:filepath];
+        NSLog(@"\nDatabase file: %@", filepath);
+        MDDatabaseCenter *center = [MDDatabaseCenter defaultCenter];
+        center.debugEnable = YES;
         
-        NSDictionary *tableMapper = @{@"objectID": @"id",
-                                      @"text": @"text",
-                                      @"integerValue": @"integer_value",
-                                      @"floatValue": @"float_value",
-                                      @"boolValue": @"bool_value"};
+        FMDatabaseQueue *databaseQueue = [[FMDatabaseQueue alloc] initWithPath:filepath];
+        database = [center requrieDatabaseWithDatabaseQueue:databaseQueue];
         
-        MDDConfiguration *configuration = [MDDConfiguration configurationWithClass:[MDDTestClass class] propertyMapper:tableMapper primaryProperty:@"objectID"];
+        MDDConfiguration *configuration = [MDDConfiguration configurationWithClass:[MDDTestClass class] propertyMapper:[MDDTestClass tableMapper] primaryProperty:@"objectID"];
         NSError *error = nil;
         MDDCompat *compat = [database addConfiguration:configuration error:&error];
-        [compat bindColumnIncrement:^MDDCompatResult(MDDCompatOperation operation, MDDLocalColumn *localColumn, MDDColumn *column) {
-            return MDDCompatResultContinue;
-        }];
-        [compat bindIndexIncrement:^MDDCompatResult(MDDCompatOperation operation, MDDLocalIndex *localIndex, MDDIndex *index) {
-            return MDDCompatResultContinue;
-        }];
+        
+        configuration = [MDDConfiguration configurationWithClass:[MDDUser class] primaryProperty:@"objectID"];
+        compat = [database addConfiguration:configuration error:&error];
+        
+        configuration = [MDDConfiguration configurationWithClass:[MDDGrade class] primaryProperty:@"objectID"];
+        compat = [database addConfiguration:configuration error:&error];
+        
+        [database prepare];
     });
     return database;
 }

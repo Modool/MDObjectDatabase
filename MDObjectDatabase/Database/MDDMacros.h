@@ -27,7 +27,22 @@
 #define MDD_STATIC_CONST static const
 #endif
 
-#if !defined(MDDKey)
-#define MDDKey(TARGET, PATH)  (((void)(NO && ((void)TARGET.new.PATH, NO)), @"" # PATH))
+#if !defined(MDDKeyPath)
+#define MDDKeyPath(CLASS, PATH) (((void)(NO && ((void)CLASS.new.PATH, NO)), # PATH))
+#endif
 
+#if !defined(NSSetObject)
+#define NSSetObject(OBJECT)  [NSSet setWithObject:OBJECT]
+#endif
+
+#if !defined(NSSetObjects)
+#define NSSetObjects(OBJECT, ...)  [NSSet setWithObjects:OBJECT, ##__VA_ARGS__, nil]
+#endif
+
+#if !defined(NSSetArray)
+#define NSSetArray(...)  [NSSet setWithArray:##__VA_ARGS__]
+#endif
+
+#if !defined(NSSetObject)
+#define NSSetObject(OBJECT)  [NSSet setWithObject:OBJECT]
 #endif

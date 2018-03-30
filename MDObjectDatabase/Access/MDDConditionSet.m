@@ -8,17 +8,13 @@
 //
 
 #import "MDDConditionSet.h"
+#import "MDDConditionSet+Private.h"
+
+#import "MDDDescription.h"
 #import "MDDCondition.h"
 
-@interface MDDConditionSet ()
-
-@property (nonatomic, assign) MDDConditionOperation operation;
-
-@property (nonatomic, strong) NSMutableSet<MDDConditionSet *> *mutableSets;
-
-@property (nonatomic, strong) NSMutableSet<MDDCondition *> *mutableConditions;
-
-@end
+#import "MDDItem.h"
+#import "MDDTableInfo.h"
 
 @implementation MDDConditionSet
 
@@ -53,24 +49,26 @@
 }
 
 + (instancetype)setWithConditions:(NSArray<MDDCondition *> *)conditions sets:(NSArray<MDDConditionSet *> *)sets operation:(MDDConditionOperation)operation;{
-    MDDConditionSet *set = [self new];
+    MDDConditionSet *set = [[self alloc] init];
     set.operation = operation;
     
     if (sets && [sets count]) {
         [[set mutableSets] addObjectsFromArray:sets.copy];
+        for (MDDConditionSet *conditionSet in sets) [[set mutableTableInfos] unionSet:[conditionSet mutableTableInfos]];
     }
     if (conditions && [conditions count]) {
         [[set mutableConditions] addObjectsFromArray:conditions.copy];
+        [[set mutableTableInfos] addObjectsFromArray:[conditions valueForKey:@"tableInfo"]];
     }
-    
     return set;
 }
 
 - (instancetype)init{
     if (self = [super init]) {
         self.operation = MDDConditionOperationAnd;
-        self.mutableSets = [NSMutableSet new];
-        self.mutableConditions = [NSMutableSet new];
+        self.mutableSets = [NSMutableSet set];
+        self.mutableConditions = [NSMutableSet set];
+        self.mutableTableInfos = [NSMutableSet set];
     }
     return self;
 }
@@ -89,6 +87,10 @@
     return [self operation] ^ [[self mutableSets] hash] ^ [[self mutableConditions] hash];
 }
 
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"multipleTable", @"operation", @"mutableSets", @"mutableConditions", @"mutableTableInfos"]] description];
+}
+
 #pragma mark - accessor
 
 - (NSArray<MDDConditionSet *> *)sets{
@@ -99,15 +101,62 @@
     return [[self mutableConditions] allObjects];
 }
 
-- (NSArray<NSString *> *)allKeys{
-    NSMutableSet *keys = [NSMutableSet set];
+- (NSArray<MDDItem> *)allKeysIgnoreMultipleTable:(BOOL)ignore;{
+    return [self _keysIgnoreMultipleTable:ignore];
+}
+
+- (NSArray<MDDItem> *)_keysIgnoreMultipleTable:(BOOL)ignore;{
+    if (ignore && [self isMultipleTable]) return nil;
+    
+    NSMutableSet<MDDItem> *keys = [NSMutableSet set];
     for (MDDConditionSet *set in self.sets) {
-        [keys addObjectsFromArray:[set allKeys]];
+        NSArray<NSString *> *subkeys = [set _keysIgnoreMultipleTable:ignore];
+        
+        [keys addObjectsFromArray:subkeys];
     }
     for (MDDCondition *condition in self.conditions) {
-        [keys addObject:condition.key ?: [NSNull null]];
+        if ([condition.key isKindOfClass:[MDDKey class]]) [keys unionSet:[(MDDKey *)[condition key] keys]];
+        else [keys addObject:condition.key ?: [NSNull null]];
     }
+    
     return [keys allObjects];
+}
+
+- (MDDDescription *)SQLDescription{
+    NSString *operation = MDConditionOperationDescription([self operation]);
+    
+    NSMutableString *SQL = [NSMutableString string];
+    NSMutableArray *values = [NSMutableArray array];
+    
+    NSArray<MDDConditionSet *> *sets = [self sets];
+    NSArray<MDDCondition *> *conditions = [self conditions];
+    
+    // ((a OR b OR c) AND (c OR d OR e) AND (f OR g OR h) ) OR (i AND j AND k)
+    [sets enumerateObjectsUsingBlock:^(MDDConditionSet *set, NSUInteger index, BOOL *stop) {
+        MDDDescription *description = [set SQLDescription];
+        [SQL appendFormat:@" ( %@ ) %@", [description SQL], index < ([sets count] - 1) ? operation : @""];
+        [values addObjectsFromArray:[description values]];
+    }];
+    
+    MDDDescription *description = [MDDCondition descriptionWithConditions:conditions operation:[self operation]];
+    [SQL appendFormat:@" %@ %@", [SQL length] ? operation : @"", [description SQL]];
+    [values addObjectsFromArray:[description values]];
+    
+    return [MDDDescription descriptionWithSQL:SQL values:values];
+}
+
+- (BOOL)isMultipleTable{
+    return [[self mutableTableInfos] count] > 1;
+}
+
+- (MDDTableInfo *)tableInfo{
+    return [self isMultipleTable] ? nil : [[self mutableTableInfos] anyObject];
+}
+
+- (MDDIndex *)index;{
+    if ([self isMultipleTable]) return nil;
+    
+    return [[self tableInfo] indexForConditionSet:self];
 }
 
 #pragma mark - public
@@ -119,6 +168,7 @@
         return [[self class] setWithCondition:condition set:self operation:MDDConditionOperationAnd];
     }
     
+    [[self mutableTableInfos] addObject:[condition tableInfo]];
     [[self mutableConditions] addObject:condition];
     
     return self;
@@ -131,6 +181,7 @@
         return [[self class] setWithCondition:condition set:self operation:MDDConditionOperationOr];
     }
     
+    [[self mutableTableInfos] addObject:[condition tableInfo]];
     [[self mutableConditions] addObject:condition];
     
     return self;
@@ -143,6 +194,7 @@
         return [[self class] setWithSets:@[set, self] operation:MDDConditionOperationAnd];
     }
     
+    [[self mutableTableInfos] unionSet:[set mutableTableInfos]];
     if ([[set sets] count]) {
         [[self mutableSets] addObject:set];
     } else {
@@ -159,6 +211,7 @@
         return [[self class] setWithSets:@[set, self] operation:MDDConditionOperationOr];
     }
     
+    [[self mutableTableInfos] unionSet:[set mutableTableInfos]];
     if ([[set sets] count]) {
         [[self mutableSets] addObject:set];
     } else {

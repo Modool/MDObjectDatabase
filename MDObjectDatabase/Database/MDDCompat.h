@@ -10,9 +10,9 @@
 
 typedef NS_ENUM(NSUInteger, MDDCompatOperation) {
     MDDCompatOperationNone,
-    MDDCompatOperationAppend,
+    MDDCompatOperationAdd,
+    MDDCompatOperationAlter,
     MDDCompatOperationDelete,
-    MDDCompatOperationReplace,
 };
 
 typedef NS_ENUM(NSUInteger, MDDCompatResult) {

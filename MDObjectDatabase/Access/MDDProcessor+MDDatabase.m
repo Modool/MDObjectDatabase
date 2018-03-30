@@ -6,118 +6,126 @@
 //  Copyright © 2017年 modool. All rights reserved.
 //
 
-#import <FMDB/FMDB.h>
-
 #import "MDDProcessor+MDDatabase.h"
 #import "MDDatabase+Executing.h"
 
+#import "MDDReferenceDatabase.h"
+
 #import "MDDDescriptor.h"
-#import "MDDTokenDescription.h"
+#import "MDDDescription.h"
+
+#import "MDDQuery+Private.h"
+#import "MDDInserter.h"
+#import "MDDUpdater.h"
+#import "MDDDeleter.h"
+#import "MDDLogger.h"
 
 @implementation MDDProcessor (MDDatabase)
 
-- (BOOL)executeInsertDescriptions:(NSArray<MDDTokenDescription *> *)descriptions block:(void (^)(NSUInteger index, NSUInteger rowID))block;{
-    NSParameterAssert(descriptions && [descriptions count]);
-    return [self executeInsert:^MDDTokenDescription *(NSUInteger index, BOOL *stop) {
-        *stop = index >= (descriptions.count - 1);
+- (BOOL)executeInserter:(MDDInserter *)inserter block:(void (^)(NSUInteger rowID))block;{
+    NSParameterAssert(inserter);
+    MDDDescription *description = [inserter SQLDescription];
+    return [self executeUpdateSQL:[description SQL] values:[description values] block:^(id<MDDReferenceDatabase> database) {
+        if (block) block([database lastInsertRowId]);
+    }];
+}
+
+- (BOOL)executeInserters:(MDDInserter *(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))resultBlock;{
+    NSParameterAssert(block);
+    return [self executeUpdateSQLs:^NSString *(NSUInteger index, NSArray **values, BOOL *stop) {
+        MDDInserter *inserter = block(index, stop);
+        NSParameterAssert(inserter);
         
-        return descriptions[index];;
-    } result:^(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop) {
-        if (block) block(index, rowID);
-    }];
-}
-
-- (BOOL)executeInsert:(MDDTokenDescription *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))resultBlock;{
-    return [self _executeUpdate:block result:^(BOOL state, FMDatabase *database, NSUInteger index, BOOL *stop) {
-        if (resultBlock) resultBlock(state, database.lastInsertRowId, index, stop);
-    }];
-}
-
-- (BOOL)executeInsertDescription:(MDDTokenDescription *)description completion:(void (^)(NSUInteger rowID))completion;{
-    return [self executeUpdateDescription:description completion:^(FMDatabase *database) {
-        if (completion) completion([database lastInsertRowId]);
-    }];
-}
-
-- (BOOL)executeUpdateDescription:(MDDTokenDescription *)description;{
-    return [self executeUpdateDescription:description completion:nil];
-}
-
-- (BOOL)executeUpdateDescription:(MDDTokenDescription *)description completion:(void (^)(FMDatabase *database))completion;{
-    NSParameterAssert(description);
-    return [[self database] executeUpdateSQL:[description tokenString] withArgumentsInArray:[description values] completion:completion];
-}
-
-- (BOOL)executeUpdateDescriptions:(NSArray<MDDTokenDescription *> *)descriptions;{
-    NSParameterAssert(descriptions && [descriptions count]);
-    return [self _executeUpdate:^MDDTokenDescription *(NSUInteger index, BOOL *stop) {
-        *stop = index >= (descriptions.count - 1);
+        MDDDescription *description = [inserter SQLDescription];
+        NSParameterAssert(description);
         
-        return descriptions[index];
-    } result:nil];
+        *values = [description values];
+        return [description SQL];
+    } block:^(BOOL state, id<MDDReferenceDatabase> database, NSUInteger index, BOOL *stop) {
+        if (resultBlock) resultBlock(state, [database lastInsertRowId], index, stop);
+    }];
 }
 
-- (BOOL)executeUpdate:(MDDTokenDescription *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(BOOL state, NSUInteger index, BOOL *stop))resultBlock;{
-    return [self _executeUpdate:block result:^(BOOL state, FMDatabase *database, NSUInteger index, BOOL *stop) {
+- (BOOL)executeDeleter:(MDDDeleter *)deleter;{
+    NSParameterAssert(deleter);
+    MDDDescription *description = [deleter SQLDescription];
+    return [self executeUpdateSQL:[description SQL] values:[description values] block:nil];
+}
+
+- (BOOL)executeDeleters:(MDDDeleter *(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, NSUInteger index, BOOL *stop))resultBlock;{
+    NSParameterAssert(block);
+    return [self executeUpdateSQLs:^NSString *(NSUInteger index, NSArray **values, BOOL *stop) {
+        MDDDeleter *deleter = block(index, stop);
+        NSParameterAssert(deleter);
+        
+        MDDDescription *description = [deleter SQLDescription];
+        NSParameterAssert(description);
+        
+        *values = [description values];
+        return [description SQL];
+    } block:^(BOOL state, id<MDDReferenceDatabase> database, NSUInteger index, BOOL *stop) {
         if (resultBlock) resultBlock(state, index, stop);
     }];
 }
 
-- (BOOL)_executeUpdate:(MDDTokenDescription *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(BOOL state, FMDatabase *database, NSUInteger index, BOOL *stop))resultBlock;{
+- (BOOL)executeUpdater:(MDDUpdater *)updater;{
+    NSParameterAssert(updater);
+    MDDDescription *description = [updater SQLDescription];
+    return [self executeUpdateSQL:[description SQL] values:[description values] block:nil];
+}
+
+- (BOOL)executeUpdaters:(MDDUpdater *(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, NSUInteger index, BOOL *stop))resultBlock;{
     NSParameterAssert(block);
-    __block BOOL success = YES;
-    [[self database] executeInTransaction:^(FMDatabase *database, BOOL *rollback) {
-        @try {
-            NSUInteger index = 0;
-            BOOL stop = NO;
-            BOOL result = YES;
-            while (!stop && result) {
-                MDDTokenDescription *description = block(index, &stop);
-                index++;
+    return [self executeUpdateSQLs:^NSString *(NSUInteger index, NSArray **values, BOOL *stop) {
+        MDDUpdater *updater = block(index, stop);
+        NSParameterAssert(updater);
         
-                if (!description) continue;
-                
-                NSArray *values = [description values];
-                if (!values || ![values count]) {
-                    result = [database executeUpdate:[description tokenString]];
-                } else {
-                    result = [database executeUpdate:[description tokenString] withArgumentsInArray:values];
-                }
-                
-                if (resultBlock) resultBlock(result, database, index - 1, &stop);
-            }
-        } @catch (NSException *exception) {
-            *rollback = YES;
-            success = NO;
-        }
+        MDDDescription *description = [updater SQLDescription];
+        NSParameterAssert(description);
+        
+        *values = [description values];
+        return [description SQL];
+    } block:^(BOOL state, id<MDDReferenceDatabase> database, NSUInteger index, BOOL *stop) {
+        if (resultBlock) resultBlock(state, index, stop);
     }];
-    return success;
 }
 
-- (void)executeQueryDescription:(MDDTokenDescription *)description block:(void (^)(NSDictionary *dictionary))block;{
-    NSParameterAssert(description);
-    [[self database] executeQuerySQL:[description tokenString] withArgumentsInArray:[description values] block:block];
+- (void)executeQuery:(MDDQuery *)query block:(void (^)(id result))block;{
+    NSParameterAssert(query);
+    MDDDescription *description = [query SQLDescription];
+    return [self executeQuerySQL:[description SQL] values:[description values] block:^(NSDictionary *dictionary) {
+        if (block) block([query transformValue:dictionary]);
+    }];
 }
 
-- (BOOL)executeQueryDescription:(MDDTokenDescription *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(NSUInteger index, NSDictionary *dictionary, BOOL *stop))resultBlock;{
-    return [self executeQuery:^NSString *(NSUInteger index, NSArray **values, BOOL *stop) {
-        MDDTokenDescription *description = block(index, stop);
+- (BOOL)executeQueries:(MDDQuery *(^)(NSUInteger index, BOOL *stop))block block:(void (^)(NSUInteger index, id result, BOOL *stop))resultBlock;{
+    NSParameterAssert(block);
+    return [self executeQuerySQLs:^NSString *(NSUInteger index, NSArray **values, BOOL *stop) {
+        MDDQuery *query = block(index, stop);
+        NSParameterAssert(query);
         
-        *values = description.values;
-        return [description tokenString];
+        MDDDescription *description = [query SQLDescription];
+        NSParameterAssert(description);
+        
+        *values = [description values];
+        return [description SQL];
     } result:^(NSUInteger index, NSDictionary *dictionary, BOOL *stop) {
-        if (resultBlock) resultBlock(index, dictionary, stop);
+        MDDQuery *query = block(index, stop);
+        NSParameterAssert(query);
+        
+        if (resultBlock) resultBlock(index, [query transformValue:dictionary], stop);
     }];
 }
 
-- (void)executeQuery:(NSString *)query values:(NSArray *)values block:(void (^)(NSDictionary *dictionary))block;{
-    [[self database] executeQuerySQL:query withArgumentsInArray:values block:block];
+- (void)executeQuerySQL:(NSString *)SQL values:(NSArray *)values block:(void (^)(NSDictionary *dictionary))block;{
+    MDDLog(MDDLoggerLevelInfo, @"%@\n%@", SQL, values);
+    [[self database] executeQuerySQL:SQL withArgumentsInArray:values block:block];
 }
 
-- (BOOL)executeQuery:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block result:(void (^)(NSUInteger index, NSDictionary *dictionary, BOOL *stop))resultBlock;{
+- (BOOL)executeQuerySQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block result:(void (^)(NSUInteger index, NSDictionary *dictionary, BOOL *stop))resultBlock;{
     NSParameterAssert(block && resultBlock);
     __block BOOL success = YES;
-    [[self database] executeInTransaction:^(FMDatabase *database, BOOL *rollback) {
+    [[self database] executeInTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
         @try {
             NSUInteger index = 0;
             BOOL stop = NO;
@@ -128,7 +136,8 @@
                 index++;
                 if (![SQL length]) continue;
                 
-                FMResultSet *resultSet = nil;
+                MDDLog(MDDLoggerLevelInfo, @"%@\n%@", SQL, values);
+                id<MDDReferenceDatabaseResultSet> resultSet = nil;
                 if (!values || ![values count]) {
                     resultSet = [database executeQuery:SQL];
                 } else {
@@ -138,6 +147,44 @@
                     if (resultBlock) resultBlock(index - 1, [resultSet resultDictionary], &stop);
                 }
                 [resultSet close];
+            }
+        } @catch (NSException *exception) {
+            *rollback = YES;
+            success = NO;
+        }
+    }];
+    return success;
+}
+
+- (BOOL)executeUpdateSQL:(NSString *)SQL values:(NSArray *)values block:(void (^)(id<MDDReferenceDatabase> database))block;{
+    MDDLog(MDDLoggerLevelInfo, @"%@\n%@", SQL, values);
+    
+    return [[self database] executeUpdateSQL:SQL withArgumentsInArray:values block:block];
+}
+
+- (BOOL)executeUpdateSQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block block:(void (^)(BOOL state, id<MDDReferenceDatabase>  database, NSUInteger index, BOOL *stop))resultBlock;{
+    NSParameterAssert(block && resultBlock);
+    __block BOOL success = YES;
+    [[self database] executeInTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
+        @try {
+            NSUInteger index = 0;
+            BOOL stop = NO;
+            BOOL result = YES;
+            while (!stop && result) {
+                NSArray *values = nil;
+                NSString *SQL = block(index, &values, &stop);
+                index++;
+                
+                if (![SQL length]) continue;
+                
+                MDDLog(MDDLoggerLevelInfo, @"%@\n%@", SQL, values);
+                if (!values || ![values count]) {
+                    result = [database executeUpdate:SQL];
+                } else {
+                    result = [database executeUpdate:SQL withArgumentsInArray:values];
+                }
+                
+                if (resultBlock) resultBlock(result, database, index - 1, &stop);
             }
         } @catch (NSException *exception) {
             *rollback = YES;

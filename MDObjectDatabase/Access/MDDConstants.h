@@ -1,5 +1,5 @@
 //
-//  MDDAccessorConstants.h
+//  MDDConstants.h
 //  MDDatabase
 //
 //  Created by xulinfeng on 2017/12/22.
@@ -17,8 +17,18 @@ typedef NS_ENUM(NSUInteger, MDDOperation) {
     MDDOperationLessThan,
     MDDOperationLessThanOrEqual,
     
+    MDDOperationNull,
+    MDDOperationNonull,
+    
+    MDDOperationExists,
+    MDDOperationNotExists,
+    
     MDDOperationLike,
     MDDOperationNotLike,
+    
+    MDDOperationGlob,
+    MDDOperationNotGlob,
+    
     MDDOperationIn,
     MDDOperationNotIn,
     
@@ -32,9 +42,9 @@ typedef NS_ENUM(NSUInteger, MDDOperation) {
     
     MDDOperationAdd,
     MDDOperationMinus,
-    
     MDDOperationMultiply,
     MDDOperationDivide,
+    MDDOperationMod,
 };
 
 typedef NS_ENUM(NSUInteger, MDDConditionOperation) {
@@ -58,4 +68,5 @@ MDD_EXTERN MDDFunction const MDDFunctionAVERAGE;
 
 MDD_EXTERN NSString *MDOperationDescription(MDDOperation operation);
 MDD_EXTERN NSString *MDConditionOperationDescription(MDDConditionOperation operation);
+MDD_EXTERN BOOL MDOperationShoulExchangePosition(MDDOperation operation);
 MDD_EXTERN Class MDOperationValueRequireClass(MDDOperation operation);

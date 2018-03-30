@@ -8,28 +8,24 @@
 //
 
 #import "MDDSetter.h"
-#import "MDDKeyValueDescriptor+Private.h"
-
+#import "MDDKeyValueDescriptor.h"
 #import "MDDColumn.h"
 #import "MDDObject.h"
 #import "MDDTableInfo.h"
-#import "MDDTokenDescription.h"
+#import "MDDDescription.h"
+#import "MDDItem.h"
 
 @implementation MDDSetter
 
-+ (instancetype)setterWithKey:(NSString *)key value:(id<NSObject, NSCopying>)value;{
-    return [self setterWithKey:key value:value transform:nil operation:MDDOperationEqual];
++ (instancetype)setterWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key value:(id<NSObject, NSCopying>)value;{
+    return [self setterWithTableInfo:tableInfo key:key value:value transform:nil operation:MDDOperationEqual];
 }
 
-+ (instancetype)setterWithKey:(NSString *)key value:(id<NSObject, NSCopying>)value operation:(MDDOperation)operation;{
-    return [self setterWithKey:key value:value transform:nil operation:operation];
++ (instancetype)setterWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key value:(id<NSObject, NSCopying>)value operation:(MDDOperation)operation;{
+    return [self setterWithTableInfo:tableInfo key:key value:value transform:nil operation:operation];
 }
 
-+ (instancetype)setterWithKey:(NSString *)key value:(id<NSObject, NSCopying>)value transform:(NSString *)transform operation:(MDDOperation)operation;{
-    return [[self alloc] initWithKey:key value:value transform:transform operation:operation];
-}
-
-- (instancetype)initWithKey:(NSString *)key value:(id<NSObject, NSCopying>)value transform:(NSString *)transform operation:(MDDOperation)operation;{
++ (instancetype)setterWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key value:(id<NSObject, NSCopying>)value transform:(NSString *)transform operation:(MDDOperation)operation;{
     NSParameterAssert(operation != MDDOperationGreaterThan);
     NSParameterAssert(operation != MDDOperationGreaterThanOrEqual);
     NSParameterAssert(operation != MDDOperationLessThan);
@@ -37,64 +33,89 @@
     
     NSParameterAssert(operation != MDDOperationLike);
     NSParameterAssert(operation != MDDOperationIn);
-    if (self = [super initWithKey:key value:value]) {
-        _transform = transform;
-        _operation = operation;
-    }
-    return self;
+    MDDSetter *setter = [super descriptorWithTableInfo:tableInfo key:key value:value];
+    setter->_transform = transform;
+    setter->_operation = operation;
+    
+    return setter;
 }
 
-- (NSString *)descriptionWithTableInfo:(MDDTableInfo *)tableInfo value:(id *)value{
-    NSParameterAssert(tableInfo);
+- (MDDDescription *)SQLDescription{
+    id key = [self key];
+    id value = [self value];
     
-    MDDColumn *column = [tableInfo columnForKey:[self key]];
+    MDDColumn *column = [[self tableInfo] columnForKey:key];
     NSParameterAssert(column);
     
-    id resultValue = [column transformValue:[self value]];
-    *value = resultValue;
+    NSString *replacement = nil;
+    NSMutableArray *values = [NSMutableArray array];
+    if ([value isKindOfClass:[MDDValue class]]) {
+        MDDValue *_value = value;
+        MDDDescription *description = [_value SQLDescription];
+        
+        replacement = [NSString stringWithFormat:@" ( %@ ) ", [description SQL]];
+        [values addObject:[description values]];
+    } else {
+        value = [column transformValue:value];
+        value = value ?: [NSNull null];
+        
+        [values addObject:value];
+    }
     
-    return [self descriptionWithColumnName:[column name] value:resultValue transform:[self transform] operation:[self operation]];
+    NSString *SQL = [self SQLWithColumn:column value:value replacement:replacement];
+    
+    return [MDDDescription descriptionWithSQL:SQL values:values];
 }
 
-- (NSString *)descriptionWithColumnName:(NSString *)columnName value:(id)value transform:(NSString *)transform operation:(MDDOperation)operation{
-    Class requireValueClass = MDOperationValueRequireClass(operation);
-    NSParameterAssert(!requireValueClass || [value isKindOfClass:requireValueClass]);
+- (NSString *)SQLWithColumn:(MDDColumn *)column value:(id)value replacement:(NSString *)replacement{
+    Class requireValueClass = MDOperationValueRequireClass([self operation]);
+    NSParameterAssert(!requireValueClass || [value isKindOfClass:requireValueClass] || [value isKindOfClass:[MDDValue class]]);
     
     NSString *equalDescription = MDOperationDescription(MDDOperationEqual);
-    NSString *operationDescription = MDOperationDescription(operation);
+    NSString *operationDescription = MDOperationDescription([self operation]);
     
-    if (operation == MDDOperationEqual) {
-        return [NSString stringWithFormat:@" %@ %@ %@ ", columnName, equalDescription, MDDatabaseToken];
+    NSString *transform = [self transform];
+    replacement = replacement ?: MDDatabaseToken;
+    
+    if ([self operation] == MDDOperationEqual) {
+        return [NSString stringWithFormat:@" %@ %@ %@ ", column.name, equalDescription, replacement];
     } else {
-        NSString *valueToken = MDDatabaseToken;
         if (transform) {
-            valueToken = [NSString stringWithFormat:@" (%@ %@) ", transform, MDDatabaseToken];
+            replacement = [NSString stringWithFormat:@" (%@ %@) ", transform, replacement];
         }
         // (column = (column + ?))
         // (column = (column + (transform ?)))
-        return [NSString stringWithFormat:@" %@ %@ (%@ %@ %@) ", columnName, equalDescription, columnName, operationDescription, valueToken];
+        return [NSString stringWithFormat:@" %@ %@ (%@ %@ %@) ", column.name, equalDescription, column.name, operationDescription, replacement];
     }
 }
 
-+ (NSArray<MDDSetter *> *)settersWithModel:(NSObject<MDDObject> *)model tableInfo:(MDDTableInfo *)tableInfo;{
-    return [self settersWithModel:model properties:nil ignoredProperties:nil tableInfo:tableInfo];
++ (NSArray<MDDSetter *> *)settersWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;{
+    return [self settersWithObject:object properties:nil ignoredProperties:nil tableInfo:tableInfo];
 }
 
-+ (NSArray<MDDSetter *> *)settersWithModel:(NSObject<MDDObject> *)model properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties tableInfo:(MDDTableInfo *)tableInfo;{
-    NSParameterAssert(model && tableInfo);
++ (NSArray<MDDSetter *> *)settersWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties tableInfo:(MDDTableInfo *)tableInfo;{
+    NSParameterAssert(object && tableInfo);
     
-    NSMutableArray<MDDSetter *> *setters = [NSMutableArray<MDDSetter *> new];
+    NSMutableArray<MDDSetter *> *setters = [NSMutableArray<MDDSetter *> array];
     for (MDDColumn *column in [tableInfo columns]) {
         if (ignoredProperties && [ignoredProperties count] && [ignoredProperties containsObject:[column propertyName]]) continue;
         else if (properties && [properties count] && ![properties containsObject:[column propertyName]])  continue;
         
-        MDDSetter *setter = [self setterWithKey:[column propertyName] value:[model valueForKey:[column  propertyName]]];
+        MDDSetter *setter = [self setterWithTableInfo:tableInfo key:[column propertyName] value:[object valueForKey:[column  propertyName]]];
         if (!setter) continue;
         
         [setters addObject:setter];
     }
     
     return [setters copy];
+}
+
++ (MDDDescription *)descriptionWithSetters:(NSArray<MDDSetter *> *)setters{
+    return [self descriptionWithDescriptors:setters separator:@" , "];
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"key", @"value", @"operation", @"transform"]] description];
 }
 
 @end

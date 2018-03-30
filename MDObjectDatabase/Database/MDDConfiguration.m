@@ -35,7 +35,7 @@
     configuration->_tableName = [tableName copy];
     configuration->_propertyMapper = [propertyMapper copy];
     configuration->_autoincrement = autoincrement;
-    configuration->_primaryProperty = [primaryProperty copy];
+    configuration->_primaryProperties = primaryProperty ? [NSSet setWithObject:primaryProperty] : nil;
     configuration->_indexes = [indexes copy];
     return configuration;
 }
@@ -70,6 +70,10 @@
     }
     self.columnConfigurations[property] = columnConfiguration;
     return YES;
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"objectClass", @"tableName", @"propertyMapper", @"autoincrement", @"primaryProperty", @"indexes", @"primaryProperties"]] description];
 }
 
 @end

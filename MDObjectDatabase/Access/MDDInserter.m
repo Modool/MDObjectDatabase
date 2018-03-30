@@ -7,37 +7,60 @@
 //
 
 #import "MDDInserter.h"
-#import "MDDDescriptor+Private.h"
-#import "MDDTableInfo.h"
 #import "MDDInsertSetter.h"
+
+#import "MDDTableInfo.h"
+#import "MDDDescription.h"
+#import "MDDConditionSet.h"
 
 @implementation MDDInserter
 
-+ (instancetype)inserterWithSetter:(NSArray<MDDInsertSetter *> *)setters;{
-    return [self inserterWithSetter:setters conditionSet:nil];
++ (instancetype)inserterWithTableInfo:(MDDTableInfo *)tableInfo setters:(NSArray<MDDInsertSetter *> *)setters;{
+    return [self inserterWithTableInfo:tableInfo setters:setters conditionSet:nil];
 }
 
-+ (instancetype)inserterWithSetter:(NSArray<MDDInsertSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;{
-    MDDInserter *descriptor = [self new];
++ (instancetype)inserterWithTableInfo:(MDDTableInfo *)tableInfo setters:(NSArray<MDDInsertSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;{
+    MDDInserter *descriptor = [self descriptorWithTableInfo:tableInfo];
     descriptor->_setters = [setters copy];
     descriptor->_conditionSet = conditionSet;
     
     return descriptor;
 }
 
-- (NSString *)descriptionWithTableInfo:(MDDTableInfo *)tableInfo value:(id *)value{
-    NSParameterAssert(tableInfo);
-    
-    return [NSString stringWithFormat:@" INSERT INTO %@ ", [tableInfo tableName]];
-}
-
-+ (MDDInserter *)inserterWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;{
++ (MDDInserter *)inserterWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;{
     NSParameterAssert(object && tableInfo);
     
-    NSArray<MDDInsertSetter *> *setters = [MDDInsertSetter settersWithModel:object tableInfo:tableInfo];
+    NSArray<MDDInsertSetter *> *setters = [MDDInsertSetter settersWithObject:object tableInfo:tableInfo];
     NSParameterAssert(setters && [setters count]);
     
-    return [MDDInserter inserterWithSetter:setters];
+    return [MDDInserter inserterWithTableInfo:tableInfo setters:setters];
+}
+
+- (MDDDescription *)SQLDescription;{
+    NSMutableArray *values = [NSMutableArray array];
+    NSMutableString *SQL = [NSMutableString stringWithFormat:@" INSERT INTO %@ ", [[self tableInfo] tableName]];
+    
+    MDDDescription *description = [MDDInsertSetter descriptionWithSetters:[self setters]];
+    NSParameterAssert(description);
+    if ([description SQL]) {
+        [SQL appendString:[description SQL]];
+        [values addObjectsFromArray:[description values]];
+    }
+    
+    if ([self conditionSet]) {
+        description = [[self conditionSet] SQLDescription];
+        
+        if ([description SQL]) {
+            [SQL appendString:[description SQL]];
+            [values addObjectsFromArray:[description values]];
+        }
+    }
+    
+    return [MDDDescription descriptionWithSQL:SQL values:values];
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"setters", @"conditionSet"]] description];
 }
 
 @end

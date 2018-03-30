@@ -9,12 +9,16 @@
 #import "MDDKeyValueDescriptor.h"
 
 @protocol MDDObject;
-@class MDDTokenDescription, MDDTableInfo;
+@class MDDDescription, MDDTableInfo;
 @interface MDDInsertSetter : MDDKeyValueDescriptor
 
-+ (instancetype)setterWithModel:(NSObject<MDDObject> *)model forPropertyWithName:(NSString *)propertyName tableInfo:(MDDTableInfo *)tableInfo;
+@property (nonatomic, strong, readonly) MDDDescription *SQLDescription NS_UNAVAILABLE;
 
-+ (NSArray<MDDInsertSetter *> *)settersWithModel:(NSObject<MDDObject> *)model tableInfo:(MDDTableInfo *)tableInfo;
++ (instancetype)setterWithModel:(id)object propertyName:(NSString *)propertyName tableInfo:(MDDTableInfo *)tableInfo;
+
++ (NSArray<MDDInsertSetter *> *)settersWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;
+
++ (MDDDescription *)descriptionWithSetters:(NSArray<MDDInsertSetter *> *)setters;
 
 @end
 

@@ -60,6 +60,10 @@
     return [self _reverseValue:value toClass:[[self attribute] objectClass]];
 }
 
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"name", @"propertyName", @"primary", @"autoincrement", @"type", @"configuration"]] description];
+}
+
 #pragma mark - private
 
 - (id)_transformValue:(id)value toClass:(Class)class;{
@@ -70,7 +74,7 @@
     }
     if (class == [NSNumber class]) {
         if ([value isKindOfClass:[NSNumber class]]) return value;
-        if ([value isKindOfClass:[NSString class]]) return [[NSNumberFormatter new] numberFromString:value];
+        if ([value isKindOfClass:[NSString class]]) return [[[NSNumberFormatter alloc] init] numberFromString:value];
         return nil;
     }
     if (class == [NSDate class]) {
@@ -111,7 +115,7 @@
 - (NSNumber *)_transformDateWithValue:(id)value;{
     if ([value isKindOfClass:[NSNumber class]]) return value;
     if ([value isKindOfClass:[NSDate class]]) return @([(NSDate *)value timeIntervalSince1970]);
-    if ([value isKindOfClass:[NSString class]]) return [[NSNumberFormatter new] numberFromString:value];
+    if ([value isKindOfClass:[NSString class]]) return [[[NSNumberFormatter alloc] init] numberFromString:value];
     
     return nil;
 }
@@ -175,6 +179,41 @@
 
 @end
 
+@implementation NSString (MDDLocalColumn)
+
+- (NSString *)stringOfPattern:(NSString *)pattern{
+    return [self stringOfPattern:pattern error:nil];
+}
+
+- (NSString *)stringOfPattern:(NSString *)pattern error:(NSError **)error;{
+    return [self stringOfPattern:pattern options:0 error:error];
+}
+
+- (NSString *)stringOfPattern:(NSString *)pattern options:(NSRegularExpressionOptions)options error:(NSError **)error;{
+    NSRange range = [self rangeOfPattern:pattern options:options error:error];
+    if (range.location == NSNotFound) return nil;
+    
+    return [self substringWithRange:range];
+}
+
+- (NSRange)rangeOfPattern:(NSString *)pattern{
+    return [self rangeOfPattern:pattern error:nil];
+}
+
+
+- (NSRange)rangeOfPattern:(NSString *)pattern error:(NSError **)error;{
+    return [self rangeOfPattern:pattern options:0 error:error];
+}
+
+- (NSRange)rangeOfPattern:(NSString *)pattern options:(NSRegularExpressionOptions)options error:(NSError **)error;{
+    NSRegularExpression *expression = [NSRegularExpression regularExpressionWithPattern:pattern options:options error:error];
+    if (!expression) return NSMakeRange(NSNotFound, 0);
+    
+    return [expression rangeOfFirstMatchInString:self options:NSMatchingWithoutAnchoringBounds range:NSMakeRange(0, self.length)];
+}
+
+@end
+
 @implementation MDDLocalColumn
 @dynamic propertyName;
 
@@ -186,61 +225,120 @@
 }
 
 + (NSDictionary<NSString *, MDDLocalColumn *> *)columnsWithSQL:(NSString *)SQL tableInfo:(MDDTableInfo *)tableInfo;{
-    NSRange range = [SQL rangeOfString:@"("];
-    NSString *descriptions = [SQL substringWithRange:NSMakeRange(range.location + 1, [SQL length] - range.location - 1 - 1)];
-    descriptions = [descriptions stringByReplacingOccurrencesOfString:@"    " withString:@" "];
-    descriptions = [descriptions stringByReplacingOccurrencesOfString:@"   " withString:@" "];
-    descriptions = [descriptions stringByReplacingOccurrencesOfString:@"  " withString:@" "];
+    SQL = [SQL stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
     
-    NSArray<NSString *> *columnDescriptions = [descriptions componentsSeparatedByString:@","];
+    NSRange range = [SQL rangeOfString:@"("];
+    SQL = [SQL substringWithRange:NSMakeRange(range.location + 1, [SQL length] - range.location - 1 - 1)];
+    
+    while ([SQL rangeOfString:@"  "].location != NSNotFound) {
+        SQL = [SQL stringByReplacingOccurrencesOfString:@"  " withString:@" "];
+    }
+    
+    NSString *unionPattern = @"primary\\s+key\\s+\\((\\s*([a-z]|_){1,}\\s*\\,)*\\s*([a-z]|_){1,}\\s*\\)";
+    NSString *compositePattern = @"constraint\\s+([a-z]|_)+\\s+primary\\s+key\\s+\\((\\s*([a-z]|_){1,}\\s*\\,)*\\s*([a-z]|_){1,}\\s*\\)";
+    
+    NSString *compositeKeyName = nil;
+    NSArray<NSString *> *unionColumnNames = nil;
+    range = [SQL rangeOfPattern:compositePattern options:NSRegularExpressionCaseInsensitive error:nil];
+    // constraint pk_t2 primary key ( a, b, c )
+    if (range.location != NSNotFound) {
+        NSString *compositeString = [SQL substringWithRange:range];
+        unionColumnNames = [self keysFromString:compositeString];
+        compositeKeyName = [compositeString componentsSeparatedByString:@" "][1];
+        
+        SQL = [SQL stringByReplacingCharactersInRange:range withString:@""];
+    } else {
+        //  primary key ( a, b, c )
+        range = [SQL rangeOfPattern:unionPattern options:NSRegularExpressionCaseInsensitive error:nil];
+        if (range.location != NSNotFound) {
+            unionColumnNames = [self keysFromString:[SQL substringWithRange:range]];
+            
+            SQL = [SQL stringByReplacingCharactersInRange:range withString:@""];
+        }
+    }
+    
+    NSArray<NSString *> *SQLs = [SQL componentsSeparatedByString:@","];
     NSMutableDictionary<NSString *, MDDLocalColumn *> *columns = [NSMutableDictionary dictionary];
-    for (NSString *description in columnDescriptions) {
-        NSString *trimingDescription = [[description stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] lowercaseString];
-        NSArray<NSString *> *keywords = [trimingDescription componentsSeparatedByString:@" "];
+    for (NSString *SQL in SQLs) {
+        MDDLocalColumn *column = [self localColumnWithSQL:SQL unionColumnNames:unionColumnNames compositeKeyName:compositeKeyName];
+        if (!column) continue;
         
-        NSString *name = keywords.count ? keywords[0] : nil;
-        NSString *typeFullString = keywords.count >= 2 ? keywords[1] : nil;
-        NSString *typeString = typeFullString;
-        NSUInteger length = 0;
-        
-        NSRange typeRange = [typeFullString rangeOfString:@"("];
-        if (typeRange.location != NSNotFound) {
-            typeString = [typeFullString substringToIndex:typeRange.location - 1];
-            length = [[typeFullString substringWithRange:NSMakeRange(typeRange.location + 1, typeFullString.length - typeRange.location - 2)] integerValue];
-            
-        }
-        NSUInteger index = [keywords indexOfObject:@"default"];
-        NSString *defaultValue = index != NSNotFound && keywords.count > (index + 1) ? keywords[index + 1] : nil;
-        
-        NSString *checkValue = nil;
-        for (NSString *keyword in keywords) {
-            NSRange range = [keyword rangeOfString:@"check("];
-            if (range.location == NSNotFound) continue;
-            
-            NSUInteger location = range.location + range.length + 1;
-            checkValue = [keyword substringWithRange:NSMakeRange(location, keyword.length - location - 1)];
-        }
-        
-        BOOL primary = [trimingDescription containsString:@"primary"];
-        BOOL autoincrement = [trimingDescription containsString:@"autoincrement"];
-        BOOL nullabled = [trimingDescription containsString:@"not null"];
-        BOOL unique = [trimingDescription containsString:@"unique"];
-        MDDColumnType type = MDDColumnTypeFromDescription(typeString);
-        
-        MDDLocalColumn *column = [MDDLocalColumn columnWithName:name primary:primary autoincrement:autoincrement type:type];
-        MDDColumnConfiguration *configuration = [MDDColumnConfiguration defaultConfigurationWithColumn:column];
-        configuration.unique = unique;
-        configuration.length = length;
-        configuration.nullabled = nullabled;
-        configuration.defaultValue = defaultValue;
-        configuration.checkValue = checkValue;
-        
-        column.configuration = configuration;
-        
-        [columns setObject:column forKey:name];
+        [columns setObject:column forKey:column.name];
     }
     
     return [columns copy];
+}
+
++ (NSArray<NSString *> *)keysFromString:(NSString *)string {
+    NSString *keyString = [string stringOfPattern:@"\\(.*\\)"];
+    keyString = [keyString stringByReplacingOccurrencesOfString:@" " withString:@""];
+    keyString = [keyString substringWithRange:NSMakeRange(1, keyString.length - 2)];
+    return [keyString componentsSeparatedByString:@","];
+}
+
++ (MDDLocalColumn *)localColumnWithSQL:(NSString *)SQL unionColumnNames:(NSArray<NSString *> *)unionColumnNames compositeKeyName:(NSString *)compositeKeyName{
+    SQL = [SQL stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    if (![SQL length]) return nil;
+    
+    NSArray<NSString *> *keywords = [SQL componentsSeparatedByString:@" "];
+    if ([keywords count] < 2) return nil;
+    
+    NSString *name = [keywords firstObject];
+    NSUInteger length = 0;
+    MDDColumnType type = MDDColumnTypeText;
+    
+    NSString *typeString = keywords[1];
+    NSRange range = [typeString rangeOfString:@"("];
+    if (range.location != NSNotFound) {
+        type = MDDColumnTypeFromDescription([typeString substringToIndex:range.location]);
+        length = [[typeString substringWithRange:NSMakeRange(range.location + 1, typeString.length - range.location - 2)] integerValue];
+    } else {
+        type = MDDColumnTypeFromDescription(typeString);
+    }
+    
+    __block BOOL nullabled = YES;
+    __block BOOL unique = NO;
+    __block BOOL primary = NO;
+    __block BOOL autoincrement = NO;
+    __block NSString *defaultValue = nil;
+    __block NSString *checkValue = nil;
+    
+    keywords = [keywords subarrayWithRange:NSMakeRange(2, [keywords count] - 2)];
+    [keywords enumerateObjectsUsingBlock:^(NSString *keyword, NSUInteger index, BOOL *stop) {
+        unique = [keyword caseInsensitiveCompare:@"unique"] == NSOrderedSame ?: unique;
+        primary = [keyword caseInsensitiveCompare:@"primary"] == NSOrderedSame ?: primary;
+        autoincrement = [keyword caseInsensitiveCompare:@"autoincrement"] == NSOrderedSame ?: autoincrement;
+        
+        BOOL not = [keyword caseInsensitiveCompare:@"not"] == NSOrderedSame;
+        if (not && [keywords count] > (index + 1)) {
+            nullabled = [keywords[index + 1] caseInsensitiveCompare:@"null"] != NSOrderedSame;
+        }
+        BOOL defaultEnabled = [keyword caseInsensitiveCompare:@"default"] == NSOrderedSame;
+        if (defaultEnabled && [keywords count] > (index + 1)) {
+            defaultValue = keywords[index + 1];
+        }
+        BOOL checkEnabled = [keyword localizedCaseInsensitiveContainsString:@"check"];
+        if (checkEnabled) {
+            NSRange range = [keyword rangeOfString:@"("];
+            if (range.location == NSNotFound) return;
+            
+            checkValue = [keyword substringWithRange:NSMakeRange(range.location + 1, keyword.length - range.location - 2)];
+        }
+    }];
+    primary = [unionColumnNames containsObject:name] ?: primary;
+ 
+    MDDLocalColumn *column = [MDDLocalColumn columnWithName:name primary:primary autoincrement:autoincrement type:type];
+    MDDColumnConfiguration *configuration = [MDDColumnConfiguration defaultConfigurationWithColumn:column];
+    configuration.unique = unique;
+    configuration.length = length;
+    configuration.nullabled = nullabled;
+    configuration.defaultValue = defaultValue;
+    configuration.checkValue = checkValue;
+    configuration.compositeKeyName = ([unionColumnNames containsObject:name] && [compositeKeyName length]) ? compositeKeyName : nil;
+    
+    column.configuration = configuration;
+    
+    return column;
 }
 
 @end
@@ -252,8 +350,7 @@ NSDictionary *MDDColumnTypeDescriptions(){
         descriptions = @{@(MDDColumnTypeText): @"TEXT",
                          @(MDDColumnTypeInteger): @"INTEGER",
                          @(MDDColumnTypeFloat): @"FLOAT",
-                         @(MDDColumnTypeDouble): @"DOUBLE",
-                         @(MDDColumnTypeBoolean): @"BLOB",
+                         @(MDDColumnTypeData): @"BLOB",
                          };
     });
     return descriptions;
@@ -274,9 +371,7 @@ MDDColumnType MDDColumnTypeFromAttribute(MDPropertyAttributes *attribute) {
     if (strcmp(type, @encode(CGPoint)) == 0 || strcmp(type, @encode(CGSize)) == 0 ||
         strcmp(type, @encode(UIEdgeInsets)) == 0 || strcmp(type, @encode(NSString *)) == 0) {
         return MDDColumnTypeText;
-    } else if (strcmp(type, @encode(double)) == 0) {
-        return MDDColumnTypeDouble;
-    } else if (strcmp(type, @encode(float)) == 0) {
+    } else if (strcmp(type, @encode(float)) == 0 || strcmp(type, @encode(double)) == 0) {
         return MDDColumnTypeFloat;
     } else if (strcmp(type, @encode(int)) == 0 || strcmp(type, @encode(long)) == 0 ||
                strcmp(type, @encode(long long)) == 0 || strcmp(type, @encode(short)) == 0 ||
@@ -286,7 +381,9 @@ MDDColumnType MDDColumnTypeFromAttribute(MDPropertyAttributes *attribute) {
                strcmp(type, @encode(NSDate *)) == 0 || strcmp(type, @encode(NSNumber *)) == 0) {
         return MDDColumnTypeInteger;
     } else if (strcmp(type, @encode(bool)) == 0) {
-        return MDDColumnTypeBoolean;
+        return MDDColumnTypeInteger;
+    } else if (strcmp(type, @encode(NSData *)) == 0 || strcmp(type, @encode(char *)) == 0) {
+        return MDDColumnTypeData;
     }
     return MDDColumnTypeText;
 }

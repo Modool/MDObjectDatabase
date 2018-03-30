@@ -13,3 +13,9 @@
 - (void)setPrimaryValue:(id)value tableInfo:(MDDTableInfo *)tableInfo;
 
 @end
+
+@interface NSArray (MDDatabaseSetValue)
+
+- (NSArray *)MDDItemMap:(id (^)(id object))block;
+
+@end

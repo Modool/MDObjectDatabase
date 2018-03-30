@@ -19,8 +19,6 @@
 // It's invalid if multiple primary properties.
 @property (nonatomic, assign, readonly) BOOL autoincrement;
 
-@property (nonatomic, copy, readonly) NSString *primaryProperty;
-
 @property (nonatomic, copy, readonly) NSDictionary *propertyMapper;
 
 @property (nonatomic, copy, readonly) NSSet<NSString *> *primaryProperties;

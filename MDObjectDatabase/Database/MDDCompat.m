@@ -19,8 +19,8 @@
     return [[self alloc] init];
 }
 
-- (MDDCompatResult)replaceLocalColumn:(MDDLocalColumn *)localColumn wtihColumn:(MDDColumn *)column;{
-    if (_columnIncrement) return _columnIncrement(MDDCompatOperationReplace, localColumn, column);
+- (MDDCompatResult)alterLocalColumn:(MDDLocalColumn *)localColumn wtihColumn:(MDDColumn *)column;{
+    if (_columnIncrement) return _columnIncrement(MDDCompatOperationAlter, localColumn, column);
 
     MDDLog(MDDLoggerLevelWarning, @"There isn't any compat to replace local column: %@ with column: %@", localColumn.name, column.name);
     return MDDCompatResultContinue;
@@ -34,26 +34,26 @@
 }
 
 - (MDDCompatResult)appendColumn:(MDDColumn *)column;{
-    if (_columnIncrement) return _columnIncrement(MDDCompatOperationAppend, nil, column);
+    if (_columnIncrement) return _columnIncrement(MDDCompatOperationAdd, nil, column);
     
     MDDLog(MDDLoggerLevelWarning, @"There isn't any compat to append column: %@", column.name);
     return MDDCompatResultContinue;
 }
 
-- (MDDCompatResult)replaceLocalIndex:(MDDLocalIndex *)localIndex wtihIndex:(MDDIndex *)index;{
-    if (_indexIncrement) return _indexIncrement(MDDCompatOperationReplace, localIndex, index);
+- (MDDCompatResult)alterLocalIndex:(MDDLocalIndex *)localIndex wtihIndex:(MDDIndex *)index;{
+    if (_indexIncrement) return _indexIncrement(MDDCompatOperationAlter, localIndex, index);
     return MDDCompatResultContinue;
 }
 
 - (MDDCompatResult)deleteLocalIndex:(MDDLocalIndex *)localIndex;{
-    if (_indexIncrement) return _indexIncrement(MDDCompatOperationReplace, localIndex, nil);
+    if (_indexIncrement) return _indexIncrement(MDDCompatOperationDelete, localIndex, nil);
     
     MDDLog(MDDLoggerLevelWarning, @"There isn't any compat to delete local index: %@", localIndex.name);
     return MDDCompatResultContinue;
 }
 
 - (MDDCompatResult)appendIndex:(MDDIndex *)index;{
-    if (_indexIncrement) return _indexIncrement(MDDCompatOperationReplace, nil, index);
+    if (_indexIncrement) return _indexIncrement(MDDCompatOperationAdd, nil, index);
     
     MDDLog(MDDLoggerLevelWarning, @"There isn't any compat to append index: %@", index.name);
     return MDDCompatResultContinue;

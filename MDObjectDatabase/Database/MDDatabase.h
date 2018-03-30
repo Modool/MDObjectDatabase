@@ -8,17 +8,17 @@
 
 #import <Foundation/Foundation.h>
 
-@protocol MDDObject;
+@protocol MDDObject, MDDReferenceDatabaseQueue;
 @class MDDTableInfo, MDDConfiguration, MDDCompat;
 @interface MDDatabase : NSObject
 
-@property (nonatomic, copy, readonly) NSString *filepath;
-
-+ (instancetype)databaseWithFilepath:(NSString *)filepath;
-- (instancetype)initWithFilepath:(NSString *)filepath;
++ (instancetype)databaseWithDatabaseQueue:(id<MDDReferenceDatabaseQueue>)queue;
+- (instancetype)initWithDatabaseQueue:(id<MDDReferenceDatabaseQueue>)queue;
 
 - (MDDTableInfo *)requireTableInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;
 - (BOOL)existTableForClass:(Class<MDDObject>)class;
+
+- (BOOL)prepare;
 - (void)close;
 
 - (MDDCompat *)addConfiguration:(MDDConfiguration *)configuration error:(NSError **)error;

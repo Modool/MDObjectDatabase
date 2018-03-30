@@ -10,103 +10,111 @@
 #import "MDDProcessor+Private.h"
 #import "MDDProcessor+MDDatabase.h"
 
-#import "MDDDescriptor+Private.h"
-
 #import "MDDatabase.h"
 #import "MDDTableInfo.h"
+#import "MDDInserter.h"
 
 #import "MDDColumn+Private.h"
-#import "MDDSetter+Private.h"
-#import "MDDCondition+Private.h"
-#import "MDDConditionSet+Private.h"
-#import "MDDSort+Private.h"
+#import "MDDSetter.h"
+#import "MDDCondition.h"
+#import "MDDConditionSet.h"
+#import "MDDSort.h"
 
 #import "MDDQuery+Private.h"
-#import "MDDFunctionQuery+Private.h"
+#import "MDDFunctionQuery.h"
 
-#import "MDDInserter+Private.h"
-#import "MDDUpdater+Private.h"
-#import "MDDDeleter+Private.h"
+#import "MDDUpdater.h"
+#import "MDDDeleter.h"
+#import "MDDDescription.h"
 
 #import "MDDObject+Private.h"
-#import "MDDTokenDescription.h"
+#import "MDDItem.h"
 
 @implementation MDDProcessor
 
 - (instancetype)initWithClass:(Class<MDDObject>)class database:(MDDatabase *)database tableInfo:(MDDTableInfo *)tableInfo;{
     if (self = [super init]) {
-        _modelClass = class;
+        _objectClass = class;
         _database = database;
         _tableInfo = tableInfo;
     }
     return self;
 }
 
+- (MDDTableInfo *)tableInfoForClass:(Class<MDDObject>)class;{
+    return [_database requireTableInfoWithClass:class error:nil];
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"objectClass", @"database", @"tableInfo"]] description];
+}
+
 #pragma mark - Append
 
-- (BOOL)insertWithObject:(NSObject<MDDObject> *)object;{
+- (BOOL)insertWithObject:(id)object;{
     NSParameterAssert(object);
     
-    MDDTokenDescription *description = [MDDInserter descriptionWithObject:object tableInfo:_tableInfo];
-    NSParameterAssert(description);
+    MDDInserter *inserter = [MDDInserter inserterWithObject:object tableInfo:_tableInfo];
+    NSParameterAssert(inserter);
     
-    return [self executeInsertDescription:description completion:^(NSUInteger rowID) {
+    return [self executeInserter:inserter block:^(NSUInteger rowID) {
         [object setPrimaryValue:[@(rowID) description] tableInfo:_tableInfo];
     }];
 }
 
-- (BOOL)insertWithObjects:(NSArray<MDDObject> *)objects;{
+- (BOOL)insertWithObjects:(NSArray *)objects;{
     NSParameterAssert(objects && [objects count]);
     if ([objects count] == 1) {
         return [self insertWithObject:[objects firstObject]];
     }
 
-    return [self insertWithObjectsWithBlock:^NSObject<MDDObject> *(NSUInteger index, BOOL *stop) {
+    return [self insertWithObjectsWithBlock:^id(NSUInteger index, BOOL *stop) {
         *stop = index >= (objects.count - 1);
         return objects[index];
-    } result:^(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop) {
-        NSObject<MDDObject> *object = objects[index];
+    } block:^(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop) {
+        id object = objects[index];
         [object setPrimaryValue:[@(rowID) description] tableInfo:_tableInfo];
     }];
 }
 
-- (BOOL)insertWithObjectsWithBlock:(NSObject<MDDObject> *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))result;{
-    return [self executeInsert:^MDDTokenDescription *(NSUInteger index, BOOL *stop) {
-        NSObject<MDDObject> * object = block(index, stop);        
-        return [MDDInserter descriptionWithObject:object tableInfo:_tableInfo];
-    } result:^(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop) {
-        if (result) result(state, rowID, index, stop);
+- (BOOL)insertWithObjectsWithBlock:(id(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))resultBlock;{
+    return [self executeInserters:^MDDInserter *(NSUInteger index, BOOL *stop) {
+        id object = block(index, stop);
+        NSParameterAssert(object);
+        return [MDDInserter inserterWithObject:object tableInfo:_tableInfo];
+    } block:^(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop) {
+        if (resultBlock) resultBlock(state, rowID, index, stop);
     }];
 }
 
 #pragma mark - Update
 
-- (BOOL)updateWithObject:(NSObject<MDDObject> *)object;{
+- (BOOL)updateWithObject:(id)object;{
     NSParameterAssert(object);
     
     return [self updateWithObject:object properties:nil];
 }
 
-- (BOOL)updateWithObject:(NSObject<MDDObject> *)object properties:(NSSet<NSString *> *)properties{
+- (BOOL)updateWithObject:(id)object properties:(NSSet<NSString *> *)properties{
     NSSet<NSString *> *ignoredProperties = [_tableInfo primaryProperties];
-    MDDCondition *condition = [MDDCondition conditionWithPrimaryValue:[object primaryValurWithTableInfo:_tableInfo]];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo primaryValue:[object primaryValurWithTableInfo:_tableInfo]];
     MDDConditionSet *conditionSet = [MDDConditionSet setWithCondition:condition];
     
     return [self updateWithObject:object properties:properties ignoredProperties:ignoredProperties conditionSet:conditionSet];
 }
 
-- (BOOL)updateWithObject:(NSObject<MDDObject> *)object properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties{
+- (BOOL)updateWithObject:(id)object properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties{
     NSMutableSet<NSString *> *mutableIgnoredProperties = [[_tableInfo primaryProperties] mutableCopy];
     if (ignoredProperties) {
         [mutableIgnoredProperties unionSet:ignoredProperties];
     }
-    MDDCondition *condition = [MDDCondition conditionWithPrimaryValue:[object primaryValurWithTableInfo:_tableInfo]];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo primaryValue:[object primaryValurWithTableInfo:_tableInfo]];
     MDDConditionSet *conditionSet = [MDDConditionSet setWithCondition:condition];
     
     return [self updateWithObject:object properties:properties ignoredProperties:mutableIgnoredProperties conditionSet:conditionSet];
 }
 
-- (BOOL)updateWithObject:(NSObject<MDDObject> *)object properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet;{
+- (BOOL)updateWithObject:(id)object properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet;{
     NSParameterAssert(object);
     
     if (!conditionSet) {
@@ -114,25 +122,25 @@
     }
     
     NSMutableSet *rquiredIgnoredProperties = [ignoredProperties ?: [NSSet set] mutableCopy];
-    [rquiredIgnoredProperties addObjectsFromArray:[conditionSet allKeys]];
+    [rquiredIgnoredProperties addObjectsFromArray:[conditionSet allKeysIgnoreMultipleTable:YES]];
     
-    MDDTokenDescription *description = [MDDUpdater descriptionWithObject:object properties:properties ignoredProperties:rquiredIgnoredProperties conditionSet:conditionSet tableInfo:_tableInfo];
-    NSParameterAssert(description);
+    MDDUpdater *updater = [MDDUpdater updaterWithObject:object properties:properties ignoredProperties:rquiredIgnoredProperties conditionSet:conditionSet tableInfo:_tableInfo];
+    NSParameterAssert(updater);
     
-    return [self executeUpdateDescription:description];
+    return [self executeUpdater:updater];
 }
 
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects;{
+- (BOOL)updateWithObjects:(NSArray *)objects;{
     NSParameterAssert(objects && [objects count]);
     return [self updateWithObjects:objects properties:nil ignoredProperties:nil];
 }
 
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects properties:(NSSet<NSString *> *)properties{
+- (BOOL)updateWithObjects:(NSArray *)objects properties:(NSSet<NSString *> *)properties{
     NSParameterAssert(objects && [objects count]);
     return [self updateWithObjects:objects properties:properties ignoredProperties:nil];
 }
 
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties;{
+- (BOOL)updateWithObjects:(NSArray *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties;{
     NSParameterAssert(objects && [objects count]);
     return [self updateWithObjects:objects properties:properties ignoredProperties:ignoredProperties conditionSet:nil];
 }
@@ -140,14 +148,14 @@
 - (MDDConditionSet *)defaultUpdateConditionSetWithTableInfo:(MDDTableInfo *)tableInfo object:(id)object{
     NSMutableArray<MDDCondition *> *conditions = [[NSMutableArray alloc] init];
     for (NSString *propertyName in [tableInfo primaryProperties]) {
-        MDDCondition *condition = [MDDCondition conditionWithKey:propertyName value:[object valueForKey:propertyName]];
+        MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:propertyName value:[object valueForKey:propertyName]];
         NSParameterAssert(condition);
         [conditions addObject:condition];
     }
     return [MDDConditionSet setWithConditions:conditions];
 }
 
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet;{
+- (BOOL)updateWithObjects:(NSArray *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet;{
     NSParameterAssert(objects && [objects count]);
     if ([objects count] == 1) {
         return [self updateWithObject:[objects firstObject] properties:properties ignoredProperties:ignoredProperties conditionSet:conditionSet];
@@ -155,7 +163,7 @@
     
     ignoredProperties = ignoredProperties ?: [NSSet set];
     
-    return [self updateWithObjectsWithBlock:^NSObject<MDDObject> *(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop) {
+    return [self updateWithObjectsWithBlock:^id(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop) {
         *stop = index >= (objects.count - 1);
         
         *propertiesPtr = properties;
@@ -168,20 +176,21 @@
     }];
 }
 
-- (BOOL)updateWithObjects:(NSArray<MDDObject> *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionKeys:(NSSet<NSString *> *)conditionKeys;{
+- (BOOL)updateWithObjects:(NSArray *)objects properties:(NSSet<NSString *> *)properties ignoredProperties:(NSSet<NSString *> *)ignoredProperties conditionKeys:(NSSet<NSString *> *)conditionKeys;{
     NSParameterAssert(objects && [objects count]);
     
     ignoredProperties = ignoredProperties ?: [NSSet set];
     conditionKeys = conditionKeys && [conditionKeys count] ? conditionKeys : [_tableInfo primaryProperties];
     
-    return [self updateWithObjectsWithBlock:^NSObject<MDDObject> *(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop) {
+    return [self updateWithObjectsWithBlock:^id(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop) {
         *stop = index >= (objects.count - 1);
-        NSObject<MDDObject> *object = objects[index];
+        id object = objects[index];
         
         NSMutableArray<MDDCondition *> *conditions = [[NSMutableArray alloc] init];
         for (NSString *conditionKey in conditionKeys) {
-            MDDCondition *condition = [MDDCondition conditionWithKey:conditionKey value:[object valueForKey:conditionKey]];
+            MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:conditionKey value:[object valueForKey:conditionKey]];
             NSParameterAssert(condition);
+            
             [conditions addObject:condition];
         }
         *propertiesPtr = properties.copy;
@@ -192,21 +201,21 @@
     } result:nil];
 }
 
-- (BOOL)updateWithObjectsWithBlock:(NSObject<MDDObject> *(^)(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop))block result:(void (^)(BOOL state, NSUInteger index, BOOL *stop))result;{
-    return [self executeUpdate:^MDDTokenDescription *(NSUInteger index, BOOL *stop) {
+- (BOOL)updateWithObjectsWithBlock:(id(^)(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop))block result:(void (^)(BOOL state, NSUInteger index, BOOL *stop))result;{
+    return [self executeUpdaters:^MDDUpdater *(NSUInteger index, BOOL *stop) {
         NSSet<NSString *> *properties = nil;
         NSSet<NSString *> *ignoredProperties = nil;
         MDDConditionSet *conditionSet = nil;
-        NSObject<MDDObject> * object = block(index, &properties, &ignoredProperties, &conditionSet, stop);
+        id object = block(index, &properties, &ignoredProperties, &conditionSet, stop);
         
         if (!conditionSet) {
             conditionSet = [self defaultUpdateConditionSetWithTableInfo:_tableInfo object:object];
         }
         NSMutableSet *rquiredIgnoredProperties = [ignoredProperties ?: [NSSet set] mutableCopy];
-        [rquiredIgnoredProperties addObjectsFromArray:[conditionSet allKeys]];
+        [rquiredIgnoredProperties addObjectsFromArray:[conditionSet allKeysIgnoreMultipleTable:YES]];
         
-        return [MDDUpdater descriptionWithObject:object properties:properties ignoredProperties:rquiredIgnoredProperties conditionSet:conditionSet tableInfo:_tableInfo];
-    } result:nil];
+        return [MDDUpdater updaterWithObject:object properties:properties ignoredProperties:rquiredIgnoredProperties conditionSet:conditionSet tableInfo:_tableInfo];
+    } block:nil];
 }
 
 - (BOOL)updateWithPrimaryValue:(id)primaryValue key:(NSString *)key value:(id)value;{
@@ -218,7 +227,7 @@
 }
 
 - (BOOL)updateWithKey:(NSString *)key value:(id)value operation:(MDDOperation)operation conditionKey:(NSString *)conditionKey conditionValue:(id)conditionValue{
-    MDDCondition *condition = [MDDCondition conditionWithKey:conditionKey value:conditionValue operation:MDDOperationEqual];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:conditionKey value:conditionValue operation:MDDOperationEqual];
     NSParameterAssert(condition);
     
     MDDConditionSet *conditionSet = [MDDConditionSet setWithCondition:condition];
@@ -234,7 +243,7 @@
     key = key ?: (id)[NSNull null];
     value = value ?: [NSNull null];
     
-    MDDSetter *setter = [MDDSetter setterWithKey:key value:value operation:operation];
+    MDDSetter *setter = [MDDSetter setterWithTableInfo:_tableInfo key:key value:value operation:operation];
     
     return [self updateWithSetters:@[setter] conditionSet:conditionSet];
 }
@@ -242,10 +251,10 @@
 #pragma mark - Update - Provide key-values and conditions
 
 - (BOOL)updateWithKeyValues:(NSDictionary *)keyValues conditionSet:(MDDConditionSet *)conditionSet;{
-    NSMutableArray *setters = [NSMutableArray new];
+    NSMutableArray *setters = [NSMutableArray array];
     for (NSString *key in [keyValues allKeys]) {
         id value = keyValues[key];
-        [setters addObject:[MDDSetter setterWithKey:key value:value]];
+        [setters addObject:[MDDSetter setterWithTableInfo:_tableInfo key:key value:value]];
     }
     return [self updateWithSetters:setters conditionSet:conditionSet];
 }
@@ -267,10 +276,7 @@
     MDDUpdater *updater = [MDDUpdater updaterWithSetter:setters conditionSet:conditionSet];
     NSParameterAssert(updater);
     
-    MDDTokenDescription *description = [MDDUpdater descriptionWithUpdater:updater tableInfo:_tableInfo];
-    NSParameterAssert(description);
-    
-    return [self executeUpdateDescription:description];
+    return [self executeUpdater:updater];
 }
 
 #pragma mark - Delete
@@ -290,7 +296,7 @@
 }
 
 - (BOOL)deleteWithKey:(NSString *)key value:(id)value operation:(MDDOperation)operation;{
-    MDDCondition *condition = [MDDCondition conditionWithKey:key value:value operation:operation];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:key value:value operation:operation];
     NSParameterAssert(condition);
     
     return [self deleteWithConditionSet:[MDDConditionSet setWithCondition:condition]];
@@ -308,14 +314,14 @@
         value = [NSString stringWithFormat:format, value];
     }
     
-    MDDCondition *condition = [MDDCondition conditionWithKey:key value:value operation:MDDOperationLike];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:key value:value operation:MDDOperationLike];
     NSParameterAssert(condition);
     
     return [self deleteWithConditionSet:[MDDConditionSet setWithCondition:condition]];
 }
 
 - (BOOL)deleteWithKey:(NSString *)key inValues:(NSSet *)values;{
-    MDDCondition *condition = [MDDCondition conditionWithKey:key value:[values allObjects] operation:MDDOperationIn];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:key value:[values allObjects] operation:MDDOperationIn];
     NSParameterAssert(condition);
     
     return [self deleteWithConditionSet:[MDDConditionSet setWithCondition:condition]];
@@ -325,13 +331,10 @@
 
 - (BOOL)deleteWithConditionSet:(MDDConditionSet *)conditionSet;{
     NSParameterAssert(conditionSet);
-    MDDDeleter *deleter = [MDDDeleter deleterWithConditionSet:conditionSet];
+    MDDDeleter *deleter = [MDDDeleter deleterWithTableInfo:_tableInfo conditionSet:conditionSet];
     NSParameterAssert(deleter);
     
-    MDDTokenDescription *description = [MDDDeleter descriptionWithDeleter:deleter tableInfo:_tableInfo];
-    NSParameterAssert(description);
-    
-    return [self executeUpdateDescription:description];
+    return [self executeDeleter:deleter];
 }
 
 #pragma mark - Fetch
@@ -385,10 +388,10 @@
     NSParameterAssert(values && [values count]);
     NSParameterAssert(operation == MDDOperationIn || operation == MDDOperationNotIn);
     
-    MDDCondition *condition = [MDDCondition conditionWithKey:key value:[values allObjects] operation:operation];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:key value:[values allObjects] operation:operation];
     MDDConditionSet *conditionSet = [MDDConditionSet setWithCondition:condition];
     
-    return [self queryWithClass:[self modelClass] conditionSet:conditionSet range:range orderByKey:orderKey ascending:ascending];
+    return [self queryWithConditionSet:conditionSet range:range orderByKey:orderKey ascending:ascending];
 }
 
 #pragma mark - Fetch - Provide searching that key equal value
@@ -414,14 +417,13 @@
 }
 
 - (NSArray *)queryWithKey:(NSString *)key value:(id)value operation:(MDDOperation)operation range:(NSRange)range orderByKey:(NSString *)orderKey ascending:(BOOL)ascending;{
-    
     MDDConditionSet *conditionSet = nil;
     if (key || value) {
-        MDDCondition *condition = [MDDCondition conditionWithKey:key value:value operation:operation];
+        MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:key value:value operation:operation];
         conditionSet = [MDDConditionSet setWithCondition:condition];
     }
     
-    return [self queryWithClass:[self modelClass] conditionSet:conditionSet range:range orderByKey:orderKey ascending:ascending];
+    return [self queryWithConditionSet:conditionSet range:range orderByKey:orderKey ascending:ascending];
 }
 
 #pragma mark - Fetch - Provide searching that key like value
@@ -438,10 +440,10 @@
     NSParameterAssert(value && [format length]);
     
     NSString *expression = [NSString stringWithFormat:format, value];
-    MDDCondition *condition = [MDDCondition conditionWithKey:key value:expression operation:MDDOperationLike];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:key value:expression operation:MDDOperationLike];
     MDDConditionSet *conditionSet = [MDDConditionSet setWithCondition:condition];
     
-    return [self queryWithClass:[self modelClass] conditionSet:conditionSet range:range orderByKey:orderKey ascending:ascending];
+    return [self queryWithConditionSet:conditionSet range:range orderByKey:orderKey ascending:ascending];
 }
 
 - (NSArray *)queryAllRows;{
@@ -459,114 +461,48 @@
 }
 
 - (NSArray *)queryWithConditionSet:(MDDConditionSet *)conditionSet range:(NSRange)range orderByKey:(NSString *)orderKey ascending:(BOOL)ascending;{
-    return [self queryWithClass:[self modelClass] conditionSet:conditionSet range:range orderByKey:orderKey ascending:ascending];
+    MDDSort *sort = [orderKey length] ? [MDDSort sortWithTableInfo:_tableInfo key:orderKey ascending:ascending] : nil;
+    
+    return [self queryWithConditionSet:conditionSet sorts:sort ? @[sort] : nil range:range];
 }
 
 - (NSArray *)queryWithConditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;{
-    return [self queryWithClass:[self modelClass] conditionSet:conditionSet sorts:sorts range:range];
-}
-
-#pragma mark - Fetch - Provide class
-
-- (NSArray *)queryWithClass:(Class<MDDObject>)class conditionSet:(MDDConditionSet *)conditionSet;{
-    return [self queryWithClass:class conditionSet:conditionSet range:(NSRange){0, 0}];
-}
-
-- (NSArray *)queryWithClass:(Class<MDDObject>)class conditionSet:(MDDConditionSet *)conditionSet range:(NSRange)range;{
-    return [self queryWithClass:class conditionSet:conditionSet range:range orderByKey:nil ascending:YES];
-}
-
-- (NSArray *)queryWithClass:(Class<MDDObject>)class conditionSet:(MDDConditionSet *)conditionSet range:(NSRange)range orderByKey:(NSString *)orderKey ascending:(BOOL)ascending;{
-    MDDSort *sort = [orderKey length] ? [MDDSort sortWithKey:orderKey ascending:ascending] : nil;
-    
-    return [self queryWithClass:class conditionSet:conditionSet sorts:sort ? @[sort] : nil range:range];
-}
-
-- (NSArray *)queryWithClass:(Class<MDDObject>)class conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;{
-    NSParameterAssert(class);
-    
-    MDDQuery *query = [MDDQuery queryWithKeys:nil sorts:sorts conditionSet:conditionSet];
+    MDDQuery *query = [MDDQuery queryWithKeys:nil set:nil conditionSet:conditionSet sorts:sorts range:range objectClass:[self objectClass]];
     NSParameterAssert(query);
     
-    MDDTokenDescription *description = [MDDQuery descriptionWithQuery:query range:range tableInfo:_tableInfo];
-    NSParameterAssert(description);
-    
-    __block NSMutableArray *models = [NSMutableArray new];
-    [self executeQueryDescription:description block:^(NSDictionary *dictionary) {
-        id object = [class objectWithDictionary:dictionary];
-        
-        if (object) [models addObject:object];
+    __block NSMutableArray *results = [NSMutableArray array];
+    [self executeQuery:query block:^(id result) {
+        if (result) [results addObject:result];
     }];
-    
-    return models;
+    return results;
 }
-
-- (BOOL)queryWithBlock:(MDDQuery *(^)(NSRange *range, NSUInteger index, BOOL *stop))block result:(void (^)(NSObject<MDDObject> * object))resultBlock;{
-    return [self queryWithClass:[self modelClass] block:block result:resultBlock];
-}
-
-- (BOOL)queryWithClass:(Class<MDDObject>)class block:(MDDQuery *(^)(NSRange *range, NSUInteger index, BOOL *stop))block result:(void (^)(NSObject<MDDObject> * object))resultBlock;{
-    NSParameterAssert(class);
-    
-    return [self executeQueryDescription:^MDDTokenDescription *(NSUInteger index, BOOL *stop) {
-        NSRange range;
-        MDDQuery *query = block(&range, index, stop);
-        NSParameterAssert(query);
-        
-        return [MDDQuery descriptionWithQuery:query range:range tableInfo:_tableInfo];
-    } result:^(NSUInteger index, NSDictionary *dictionary, BOOL *stop) {
-        id object = [class objectWithDictionary:dictionary];
-        
-        if (resultBlock) resultBlock(object);
-    }];
-}
-
 
 #pragma mark - Fetch - Provide function
 
 - (NSUInteger)queryCountWithKey:(NSString *)key value:(id)value{
-    MDDCondition *condition = [MDDCondition conditionWithKey:key value:value];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo key:key value:value];
     MDDConditionSet *conditionSet = condition ? [MDDConditionSet setWithCondition:condition] : nil;
     
-    return [self queryCountWithConditionSet:conditionSet];
+    return [[self queryWithKey:nil function:MDDFunctionCOUNT conditionSet:conditionSet] unsignedIntegerValue];
 }
 
 - (NSUInteger)queryCountWithConditionSet:(MDDConditionSet *)conditionSet;{
-    return [self queryCountWithKey:nil conditionSet:conditionSet];
+    return [[self queryWithKey:nil function:MDDFunctionCOUNT conditionSet:conditionSet] unsignedIntegerValue];
 }
 
 - (NSUInteger)queryCountWithKey:(NSString *)key conditionSet:(MDDConditionSet *)conditionSet;{
     return [[self queryWithKey:key function:MDDFunctionCOUNT conditionSet:conditionSet] unsignedIntegerValue];
 }
 
-- (id)queryWithKey:(NSString *)key function:(MDDFunction)fuction conditionSet:(MDDConditionSet *)conditionSet;{
-    MDDFunctionQuery *query = [MDDFunctionQuery functionQueryWithKey:key function:fuction conditionSet:conditionSet];
-
-    NSString *alias = @"function_result";
-    MDDTokenDescription *description = [MDDFunctionQuery descriptionWithQuery:query alias:alias tableInfo:_tableInfo];
+- (id)queryWithKey:(NSString *)key function:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;{
+    MDDFuntionKey *key_ = [MDDFuntionKey keyWithTableInfo:_tableInfo key:key function:function alias:@"function_result"];
+    MDDFunctionQuery *query = [MDDFunctionQuery fuctionQueryWithKey:key_ conditionSet:conditionSet];
     
     __block id result = nil;
-    [self executeQueryDescription:description block:^(NSDictionary *dictionary) {
-        result = dictionary[alias];
+    [self executeQuery:query block:^(id value) {
+        result = value;
     }];
     return result == [NSNull null] ? nil : result;
-}
-
-- (BOOL)functionQueries:(MDDFunctionQuery *(^)(NSUInteger index, BOOL *stop))block result:(void (^)(NSUInteger index, id value))resultBlock{
-    NSMutableArray<MDDTokenDescription *> *descriptions = [NSMutableArray new];
-    NSString *alias = @"function_result";
-    return [self executeQueryDescription:^MDDTokenDescription *(NSUInteger index, BOOL *stop) {
-        MDDFunctionQuery *query = block(index, stop);
-        MDDTokenDescription *description = [MDDFunctionQuery descriptionWithQuery:query alias:alias tableInfo:_tableInfo];
-        if (!description) return nil;
-        
-        [descriptions addObject:description];
-        
-        return description;
-    } result:^(NSUInteger index, NSDictionary *dictionary, BOOL *stop) {
-        id result = dictionary[alias];
-        if (resultBlock) resultBlock(index, result == [NSNull null] ? nil : result);
-    }];
 }
 
 @end

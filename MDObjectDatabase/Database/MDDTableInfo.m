@@ -12,7 +12,6 @@
 #import "MDPropertyAttributes.h"
 
 #import "MDDColumn+Private.h"
-#import "MDDDescriptor+Private.h"
 #import "MDDConfiguration+Private.h"
 #import "MDDObject.h"
 #import "MDDIndex.h"
@@ -25,24 +24,27 @@
     Class<MDDObject> class = [configuration objectClass];
     NSString *tableName = [configuration tableName];
     
-    NSSet<NSString *> *primaryProperties = [configuration primaryProperties] ?: [NSSet setWithObject:[configuration primaryProperty]];
+    NSSet<NSString *> *primaryProperties = [configuration primaryProperties];
     if (!primaryProperties || ![primaryProperties count]) {
         if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeNonePrimaryKey userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"None of primary keys for table %@ of class %@", tableName, class]}];
         return nil;
     }
     BOOL autoincrement = [configuration autoincrement];
-    NSDictionary *propertyMapping = [configuration propertyMapper];
-    NSArray<MDPropertyAttributes *> *attributes = MDPropertyAttributesForClass(class, propertyMapping != nil);
-    if ([propertyMapping count]) {
-        attributes = [self _attributes:attributes fitlerByPropertyNames:[propertyMapping allKeys]];
+    NSDictionary *propertyMapper = [configuration propertyMapper];
+    NSSet<MDPropertyAttributes *> *attributes = nil;
+    if ([propertyMapper count]) {
+        attributes = [NSSet setWithArray:MDPropertyAttributesNamed(class, [propertyMapper allKeys])];
     } else {
-        propertyMapping = [self _propertyMappingFromPropertyAttributes:attributes];
+        attributes = [NSSet setWithArray:MDPropertyAttributesForClass(class, NO)];
+        NSArray<MDPropertyAttributes *> *attributesArray = [attributes allObjects];
+        NSArray<NSString *> *names = [attributesArray valueForKey:@"name"];
+        propertyMapper = [NSDictionary dictionaryWithObjects:names forKeys:names];
     }
     
-    NSMutableDictionary<NSString *, MDDColumn *> *columnMapping = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary<NSString *, MDDColumn *> *columnMapper = [[NSMutableDictionary alloc] init];
     for (MDPropertyAttributes *attribute  in attributes) {
         NSString *propertyName = [attribute name];
-        NSString *columnName = propertyMapping[propertyName];
+        NSString *columnName = propertyMapper[propertyName];
         BOOL primary = [primaryProperties containsObject:propertyName];
         
         MDDColumn *column = [MDDColumn columnWithName:columnName propertyName:propertyName primary:primary autoincrement:(primary && autoincrement) attribute:attribute];
@@ -52,43 +54,58 @@
             if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to reference property %@ with column %@ for table %@ of class %@", propertyName, columnName, tableName, class]}];
             return nil;
         }
-        
-        columnMapping[propertyName] = column;
+        columnMapper[columnName] = column;
     }
     
     NSArray<MDDIndex *> *indexes = [configuration indexes];
     NSArray<NSString *> *indexNames = [indexes valueForKey:@"name"];
     NSDictionary *indexesMapping = [NSDictionary dictionaryWithObjects:indexes forKeys:indexNames];
     
-    MDDTableInfo *info = [self new];
+    MDDTableInfo *info = [[self alloc] init];
     
     info->_objectClass = class;
     info->_tableName = [tableName copy];
     info->_primaryProperties = [primaryProperties copy];
     
-    info->_columnMapping = [columnMapping copy];
-    info->_indexeMapping = [indexesMapping copy];
-    info->_propertyMapping = [propertyMapping copy];
+    info->_columnMapper = [columnMapper copy];
+    info->_indexMapper = [indexesMapping copy];
+    info->_propertyColumnMapper = [propertyMapper copy];
+    info->_columnPropertyMapper = [NSDictionary dictionaryWithObjects:[propertyMapper allKeys] forKeys:[propertyMapper allValues]];
     
     return info;
+}
+
+- (NSUInteger)hash{
+    return [[self objectClass] hash] ^ [[self tableName] hash];
+}
+
+- (BOOL)isEqual:(MDDTableInfo *)object{
+    if ([super isEqual:object]) return YES;
+    if (![object isKindOfClass:[MDDTableInfo class]]) return NO;
+    
+    return [self objectClass] == [object objectClass] && [[self tableName] isEqualToString:[object tableName]];
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"objectClass", @"tableName", @"primaryProperties", @"columnMapper", @"indexMapper", @"propertyColumnMapper"]] description];
 }
 
 #pragma mark - accessor
 
 - (NSArray<NSString *> *)columnNames{
-    return [[self columnMapping] allKeys];
+    return [[self columnMapper] allKeys];
 }
 
 - (NSArray<MDDColumn *> *)columns{
-    return [[self columnMapping] allValues];
+    return [[self columnMapper] allValues];
 }
 
 - (NSArray<NSString *> *)indexNames{
-    return [[self indexeMapping] allKeys];
+    return [[self indexMapper] allKeys];
 }
 
 - (NSArray<MDDIndex *> *)indexes{
-    return [[self indexeMapping] allValues];
+    return [[self indexMapper] allValues];
 }
 
 #pragma mark - protected
@@ -102,8 +119,9 @@
         key = [primaryProperties anyObject];
     }
     NSParameterAssert(key);
+    NSString *columnName = self.propertyColumnMapper[key];
     
-    MDDColumn *column = self.columnMapping[key];
+    MDDColumn *column = self.columnMapper[columnName];
     NSParameterAssert(column);
     
     return column;
@@ -120,9 +138,10 @@
 
 - (MDDIndex *)indexForConditionSet:(MDDConditionSet *)conditionSet;{
     NSParameterAssert(conditionSet);
-    NSArray *allKeys = [conditionSet allKeys];
+    NSArray *allKeys = [conditionSet allKeysIgnoreMultipleTable:YES];
+    if (![allKeys count]) return nil;
     
-    NSMutableSet<NSString *> *keys = [NSMutableSet new];
+    NSMutableSet<NSString *> *keys = [NSMutableSet set];
     for (id key in allKeys) {
         NSString *keyString = key;
         if ((!key || key == [NSNull null]) && [[self primaryProperties] count] == 1) {
@@ -136,23 +155,8 @@
 
 #pragma mark - private
 
-+ (NSDictionary *)_propertyMappingFromPropertyAttributes:(NSArray<MDPropertyAttributes *> *)attributes {
-    NSMutableDictionary<NSString *, NSString *> *mapping = [NSMutableDictionary<NSString *, NSString *> new];
-    
-    for (MDPropertyAttributes *attribute in attributes) {
-        NSString *propertyName = [attribute name];
-        NSParameterAssert(propertyName);
-        
-        if ([[mapping allKeys] containsObject:[attribute name]]) continue;
-        
-        mapping[propertyName] = propertyName;
-    }
-    
-    return [mapping copy];
-}
-
 + (NSArray<MDPropertyAttributes *> *)_attributes:(NSArray<MDPropertyAttributes *> *)attributes fitlerByPropertyNames:(NSArray<NSString *> *)propertyNames{
-    NSMutableDictionary<NSString *, MDPropertyAttributes *> *properties = [NSMutableDictionary<NSString *, MDPropertyAttributes *> new];
+    NSMutableDictionary<NSString *, MDPropertyAttributes *> *properties = [NSMutableDictionary<NSString *, MDPropertyAttributes *> dictionary];
     
     for (MDPropertyAttributes *attribute in attributes) {
         NSParameterAssert([attribute name]);

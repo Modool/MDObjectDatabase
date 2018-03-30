@@ -10,31 +10,65 @@
 #import "MDDColumn.h"
 #import "MDDInsertSetter.h"
 #import "MDDTableInfo.h"
+#import "MDDItem.h"
+#import "MDDDescription.h"
+#import "MDDConstants.h"
 
 @implementation MDDInsertSetter
+@dynamic SQLDescription;
 
-+ (instancetype)setterWithModel:(NSObject<MDDObject> *)model forPropertyWithName:(NSString *)propertyName tableInfo:(MDDTableInfo *)tableInfo;{
-    NSParameterAssert(model && [propertyName length] && tableInfo);
++ (instancetype)setterWithModel:(id)object propertyName:(NSString *)propertyName tableInfo:(MDDTableInfo *)tableInfo;{
+    NSParameterAssert(object && [propertyName length] && tableInfo);
     
-    return [self descriptorWithKey:propertyName value:[model valueForKey:propertyName]];
+    return [self descriptorWithTableInfo:tableInfo key:propertyName value:[object valueForKey:propertyName]];
 }
 
-+ (NSArray<MDDInsertSetter *> *)settersWithModel:(NSObject<MDDObject> *)model tableInfo:(MDDTableInfo *)tableInfo;{
-    NSParameterAssert(model && tableInfo);
++ (NSArray<MDDInsertSetter *> *)settersWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;{
+    NSParameterAssert(object && tableInfo);
     
-    NSMutableArray<MDDInsertSetter *> *setters = [NSMutableArray<MDDInsertSetter *> new];
+    NSMutableArray<MDDInsertSetter *> *setters = [NSMutableArray<MDDInsertSetter *> array];
     for (MDDColumn *column in [tableInfo columns]) {
-        id value = [model valueForKey:[column propertyName]];
+        id value = [object valueForKey:[column propertyName]];
         
         if ([column isPrimary] && !value) continue;
         
-        MDDInsertSetter *setter = [self descriptorWithKey:[column propertyName] value:value];
+        MDDInsertSetter *setter = [self descriptorWithTableInfo:tableInfo key:[column propertyName] value:value];
         if (!setter) continue;
         
         [setters addObject:setter];
     }
     
     return [setters copy];
+}
+
++ (MDDDescription *)descriptionWithSetters:(NSArray<MDDInsertSetter *> *)setters;{
+    NSParameterAssert([setters count]);
+    NSMutableArray<NSString *> *columns = [NSMutableArray<NSString *> array];
+    NSMutableArray<NSString *> *tokens = [NSMutableArray<NSString *> array];
+    NSMutableArray *values = [NSMutableArray array];
+    
+    for (MDDInsertSetter *setter in setters) {
+        id key = [setter key];
+        id value = [setter value];
+        if ([value isKindOfClass:[MDDValue class]]) {
+            MDDValue *_value = value;
+            MDDDescription *description = [_value SQLDescription];
+            [columns addObject:[description SQL]];
+            [values addObject:[description values]];
+        } else {
+            MDDColumn *column = [setter.tableInfo columnForKey:key];
+            NSParameterAssert(column);
+            value = [column transformValue:value];
+            value = value ?: [NSNull null];
+            
+            [values addObject:value];
+            [columns addObject:[column name]];
+            [tokens addObject:MDDatabaseToken];
+        }
+    }
+    NSString *SQL = [NSString stringWithFormat:@" ( %@ ) VALUES ( %@ )", [columns componentsJoinedByString:@","], [tokens componentsJoinedByString:@","]];
+    
+    return [MDDDescription descriptionWithSQL:SQL values:values];
 }
 
 @end

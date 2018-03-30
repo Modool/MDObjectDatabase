@@ -15,10 +15,10 @@
 - (MDDConditionSet *)and:(MDDCondition *)condition;
 - (MDDConditionSet *)or:(MDDCondition *)condition;
 
-+ (NSArray<MDDCondition *> *)conditionsWithKey:(NSString *)key integerRange:(MDDIntegerRange)integerRange;
-+ (NSArray<MDDCondition *> *)conditionsWithKey:(NSString *)key integerRange:(MDDIntegerRange)integerRange positive:(BOOL)positive;
++ (NSArray<MDDCondition *> *)conditionsWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key integerRange:(MDDIntegerRange)integerRange;
++ (NSArray<MDDCondition *> *)conditionsWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key integerRange:(MDDIntegerRange)integerRange positive:(BOOL)positive;
 
-+ (NSArray<MDDCondition *> *)conditionsWithKey:(NSString *)key floatRange:(MDDFloatRange)floatRange;
-+ (NSArray<MDDCondition *> *)conditionsWithKey:(NSString *)key floatRange:(MDDFloatRange)floatRange positive:(BOOL)positive;
++ (NSArray<MDDCondition *> *)conditionsWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key floatRange:(MDDFloatRange)floatRange;
++ (NSArray<MDDCondition *> *)conditionsWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key floatRange:(MDDFloatRange)floatRange positive:(BOOL)positive;
 
 @end

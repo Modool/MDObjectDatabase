@@ -27,3 +27,17 @@
 }
 
 @end
+
+@implementation NSArray (MDDatabaseSetValue)
+
+- (NSArray *)MDDItemMap:(id (^)(id object))block{
+    NSParameterAssert(block);
+    NSMutableArray *array = [NSMutableArray array];
+    for (id object in self) {
+        id result = block(object) ?: [NSNull null];
+        
+        [array addObject:result];
+    }
+    return array;
+}
+@end

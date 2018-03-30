@@ -9,7 +9,13 @@
 #import <Foundation/Foundation.h>
 #import <MDObjectDatabase/MDObjectDatabase.h>
 
-@interface MDDTestClass : NSObject <MDDObject>
+#import "FMDB+MDDReferenceDatabase.h"
+
+@interface MDBaseClass : NSObject <MDDObject>
+
+@end
+
+@interface MDDTestClass : MDBaseClass
 
 @property (nonatomic, copy) NSString *objectID;
 
@@ -20,6 +26,30 @@
 @property (nonatomic, assign) float floatValue;
 
 @property (nonatomic, assign) BOOL boolValue;
+
+@end
+
+@interface MDDUser : MDBaseClass
+
+@property (nonatomic, copy) NSString *objectID;
+
+@property (nonatomic, copy) NSString *gradeID;
+
+@property (nonatomic, copy) NSString *name;
+
+@property (nonatomic, copy) NSString *favor;
+
+@property (nonatomic, assign) NSUInteger age;
+
+@end
+
+@interface MDDGrade : MDBaseClass 
+
+@property (nonatomic, copy) NSString *objectID;
+
+@property (nonatomic, copy) NSString *name;
+
+@property (nonatomic, assign) NSUInteger level;
 
 @end
 

@@ -130,7 +130,8 @@ MDD_EXTERN Method MDImmediateInstanceMethod (Class aClass, SEL aSelector);
 MDD_EXTERN MDPropertyAttributes *MDCopyPropertyAttributes (objc_property_t property);
 
 MDD_EXTERN NSArray<MDPropertyAttributes *> *MDPropertyAttributesForCurrentClass(Class<NSObject> class);
-
 MDD_EXTERN NSArray<MDPropertyAttributes *> *MDPropertyAttributesForClass(Class<NSObject> class, BOOL containedSuperClass);
+
+MDD_EXTERN NSArray<MDPropertyAttributes *> *MDPropertyAttributesNamed(Class<NSObject> class, NSArray<NSString *> *names);
 
 

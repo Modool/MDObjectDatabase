@@ -16,10 +16,10 @@
 
 @property (nonatomic, strong, readonly) MDDConditionSet *conditionSet;
 
-+ (instancetype)inserterWithSetter:(NSArray<MDDInsertSetter *> *)setters;
-+ (instancetype)inserterWithSetter:(NSArray<MDDInsertSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;
++ (instancetype)inserterWithTableInfo:(MDDTableInfo *)tableInfo setters:(NSArray<MDDInsertSetter *> *)setters;
++ (instancetype)inserterWithTableInfo:(MDDTableInfo *)tableInfo setters:(NSArray<MDDInsertSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;
 
-+ (instancetype)inserterWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;
++ (instancetype)inserterWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;
 
 @end
 

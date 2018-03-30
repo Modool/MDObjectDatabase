@@ -8,13 +8,15 @@
 
 #import "MDDDescriptor.h"
 
+@protocol MDDItem;
 @interface MDDKeyValueDescriptor : MDDDescriptor
 
-@property (nonatomic, copy, readonly) NSString *key;
+@property (nonatomic, strong, readonly) id<MDDItem> key;
 
-@property (nonatomic, copy, readonly) id<NSObject, NSCopying> value;
+@property (nonatomic, strong, readonly) id<NSObject> value;
 
-+ (instancetype)descriptorWithKey:(NSString *)key value:(id<NSObject, NSCopying>)value;
-- (instancetype)initWithKey:(NSString *)key value:(id<NSObject, NSCopying>)value;
++ (instancetype)descriptorWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key value:(id<NSObject, NSCopying>)value;
+
++ (MDDDescription *)descriptionWithDescriptors:(NSArray<MDDKeyValueDescriptor *> *)descriptors separator:(NSString *)separator;
 
 @end

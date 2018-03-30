@@ -7,19 +7,22 @@
 //
 
 #import "MDDDescriptor.h"
-#import "MDDAccessorConstants.h"
+#import "MDDConstants.h"
 
-@class MDDCondition;
+@protocol MDDItem;
+@class MDDCondition, MDDIndex;
 @interface MDDConditionSet : MDDDescriptor
+
+@property (nonatomic, strong, readonly) MDDIndex *index;
 
 // Default is MDDOperationConditionAnd
 @property (nonatomic, assign, readonly) MDDConditionOperation operation;
 
-@property (nonatomic, strong, readonly) NSArray<MDDConditionSet *> *sets;
+@property (nonatomic, copy, readonly) NSArray<MDDConditionSet *> *sets;
 
 @property (nonatomic, copy, readonly) NSArray<MDDCondition *> *conditions;
 
-@property (nonatomic, copy, readonly) NSArray<NSString *> *allKeys;
+- (NSArray<MDDItem> *)allKeysIgnoreMultipleTable:(BOOL)ignore;
 
 + (instancetype)setWithCondition:(MDDCondition *)condition;
 + (instancetype)setWithConditions:(NSArray<MDDCondition *> *)conditions;

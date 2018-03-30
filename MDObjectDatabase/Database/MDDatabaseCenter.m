@@ -9,6 +9,7 @@
 #import "MDDatabaseCenter.h"
 #import "MDDLogger.h"
 #import "MDDatabase.h"
+#import "MDDReferenceDatabase.h"
 
 @interface MDDatabaseCenter ()
 
@@ -36,6 +37,10 @@
     return _logger.enable;
 }
 
+- (NSString *)description{
+    return [[self databases] description];
+}
+
 #pragma mark - public
 
 + (MDDatabaseCenter *)defaultCenter;{
@@ -47,11 +52,12 @@
     return center;
 }
 
-- (MDDatabase *)requrieDatabaseWithFilepath:(NSString *)filepath;{
-    MDDatabase *database = self.databases[filepath];
+- (MDDatabase *)requrieDatabaseWithDatabaseQueue:(id<MDDReferenceDatabaseQueue>)queue;{
+    NSString *path = queue.path;
+    MDDatabase *database = self.databases[path];
     if (!database) {
-        database = [MDDatabase databaseWithFilepath:filepath];
-        self.databases[filepath] = database;
+        database = [MDDatabase databaseWithDatabaseQueue:queue];
+        self.databases[path] = database;
     }
     return database;
 }

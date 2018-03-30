@@ -8,6 +8,7 @@
 
 #import "MDDAccessor.h"
 #import "MDDProcessor+Private.h"
+#import "MDDProcessor+MDDatabase.h"
 
 #import "MDDatabase.h"
 
@@ -25,7 +26,7 @@
 
 - (instancetype)initWithClass:(Class<MDDObject>)class database:(MDDatabase *)database queue:(dispatch_queue_t)queue;{
     if (self = [super init]) {
-        _modelClass = class;
+        _objectClass = class;
         _database = database;
         _queue = queue;
         _queueTag = &_queueTag;
@@ -36,6 +37,10 @@
         NSAssert(_tableInfo && !error, [error description]);
     }
     return self;
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"objectClass", @"database", @"tableInfo", @"queue"]] description];
 }
 
 - (void)_sync:(dispatch_block_t)block;{
@@ -54,16 +59,16 @@
     }
 }
 
-- (void)sync:(void (^)(id<MDDProcessor> processor))block;{
-    MDDProcessor *operator = [[MDDProcessor alloc] initWithClass:_modelClass database:_database tableInfo:_tableInfo];
+- (void)sync:(void (^)(id<MDDProcessor, MDDCoreProcessor> processor))block;{
+    MDDProcessor *operator = [[MDDProcessor alloc] initWithClass:_objectClass database:_database tableInfo:_tableInfo];
     
     [self _sync:^{
         block(operator);
     }];
 }
 
-- (void)async:(void (^)(id<MDDProcessor> processor))block;{
-    MDDProcessor *operator = [[MDDProcessor alloc] initWithClass:_modelClass database:_database tableInfo:_tableInfo];
+- (void)async:(void (^)(id<MDDProcessor, MDDCoreProcessor> processor))block;{
+    MDDProcessor *operator = [[MDDProcessor alloc] initWithClass:_objectClass database:_database tableInfo:_tableInfo];
     
     [self _async:^{
         block(operator);

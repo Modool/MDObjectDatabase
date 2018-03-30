@@ -7,18 +7,38 @@
 //
 
 #import "MDDDeleter.h"
+#import "MDDTableInfo.h"
+#import "MDDConditionSet.h"
+#import "MDDDescription.h"
 
 @implementation MDDDeleter
 
-+ (instancetype)deleter;{
-    return [self deleterWithConditionSet:nil];
++ (instancetype)deleterWithTableInfo:(MDDTableInfo *)tableInfo;{
+    return [self deleterWithTableInfo:tableInfo conditionSet:nil];
 }
 
-+ (instancetype)deleterWithConditionSet:(MDDConditionSet *)conditionSet;{
-    MDDDeleter *descriptor = [self new];
++ (instancetype)deleterWithTableInfo:(MDDTableInfo *)tableInfo conditionSet:(MDDConditionSet *)conditionSet;{
+    MDDDeleter *descriptor = [self descriptorWithTableInfo:tableInfo];
     descriptor->_conditionSet = conditionSet;
     
     return descriptor;
+}
+
+- (MDDDescription *)SQLDescription{
+    NSMutableString *SQL = [NSMutableString stringWithFormat:@" DELETE FROM %@ ", [[self tableInfo] tableName]];
+    
+    NSArray *values = @[];
+    MDDDescription *description = [[self conditionSet] SQLDescription];
+    if ([description SQL]) {
+        values = [values arrayByAddingObjectsFromArray:[description values]];
+        [SQL appendFormat:@" WHERE %@ ", [description SQL]];
+    }
+    
+    return [MDDDescription descriptionWithSQL:SQL values:values];
+}
+
+- (NSString *)description{
+    return [[self conditionSet] description];
 }
 
 @end

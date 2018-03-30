@@ -10,7 +10,7 @@
 #import "MDObjectDatabase.h"
 
 #import "MDDatabaseTestsGlobal.h"
-#import "MDDCondition+Private.h"
+#import "MDDCondition.h"
 #import "MDDConditionSet+Private.h"
 
 @interface MDDConditionTests : XCTestCase
@@ -20,66 +20,69 @@
 @implementation MDDConditionTests
 
 - (void)testPrimaryValue {
-    MDDCondition *condition = [MDDCondition conditionWithPrimaryValue:@"123"];
     MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
     
-    MDDTokenDescription *description = [MDDCondition descriptionWithConditions:@[condition] operation:MDDConditionOperationAnd tableInfo:tableInfo];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"123"];
+    MDDDescription *description = [condition SQLDescription];
+    
     XCTAssertNotNil(description);
-    XCTAssert([description.tokenString containsString:@"id = ?"]);
+    XCTAssert([description.SQL containsString:@"id = ?"]);
     XCTAssertEqual(description.values.firstObject, @"123");
 }
 
 - (void)testKeyValue {
-    MDDCondition *condition = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
     MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+    MDDDescription *description = [condition SQLDescription];
     
-    MDDTokenDescription *description = [MDDCondition descriptionWithConditions:@[condition] operation:MDDConditionOperationAnd tableInfo:tableInfo];
     XCTAssertNotNil(description);
-    XCTAssert([description.tokenString containsString:@"integer_value = ?"]);
+    XCTAssert([description.SQL containsString:@"integer_value = ?"]);
     XCTAssertEqual(description.values.firstObject, @123);
 }
 
 - (void)testConditionSet_AND_OR {
-    MDDCondition *condition1 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, boolValue) value:@YES];
-    MDDCondition *condition3 = [MDDCondition conditionWithPrimaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, text) value:@"text"];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    
+    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
+    MDDCondition *condition3 = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"3333"];
+    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4]];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4]];
     
     MDDConditionSet *set3 = [[set1 orSet:set2] or:condition3];
     
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
-    
-    MDDTokenDescription *description = [MDDConditionSet descriptionWithConditionSet:set3 tableInfo:tableInfo];
+    MDDDescription *description = [set3 SQLDescription];
     XCTAssertNotNil(description);
     NSLog(@"%@", description);
 }
 
 - (void)testConditionSet_OR_AND {
-    MDDCondition *condition1 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, boolValue) value:@YES];
-    MDDCondition *condition3 = [MDDCondition conditionWithPrimaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, text) value:@"text"];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    
+    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
+    MDDCondition *condition3 = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"3333"];
+    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4] operation:MDDConditionOperationOr];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4] operation:MDDConditionOperationOr];
     
     MDDConditionSet *set3 = [[set1 andSet:set2] and:condition3];
     
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
-    
-    MDDTokenDescription *description = [MDDConditionSet descriptionWithConditionSet:set3 tableInfo:tableInfo];
+    MDDDescription *description = [set3 SQLDescription];
     XCTAssertNotNil(description);
     NSLog(@"%@", description);
 }
 
 - (void)testConditionSet_AND_AND {
-    MDDCondition *condition1 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, boolValue) value:@YES];
-    MDDCondition *condition3 = [MDDCondition conditionWithPrimaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, text) value:@"text"];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    
+    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
+    MDDCondition *condition3 = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"3333"];
+    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4]];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4]];
@@ -87,19 +90,19 @@
     MDDConditionSet *set3 = [[set1 andSet:set2] and:condition3];
     XCTAssertEqual(set3.conditions.count, 4);
     
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
-    
-    MDDTokenDescription *description = [MDDConditionSet descriptionWithConditionSet:set3 tableInfo:tableInfo];
+    MDDDescription *description = [set3 SQLDescription];
     XCTAssertNotNil(description);
     
     NSLog(@"%@", description);
 }
 
 - (void)testConditionSet_OR_OR {
-    MDDCondition *condition1 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, integerValue) value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, boolValue) value:@YES];
-    MDDCondition *condition3 = [MDDCondition conditionWithPrimaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithKey:MDDKey(MDDTestClass, text) value:@"text"];
+    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    
+    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
+    MDDCondition *condition3 = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"3333"];
+    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4] operation:MDDConditionOperationOr];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4] operation:MDDConditionOperationOr];
@@ -107,9 +110,7 @@
     MDDConditionSet *set3 = [[set1 orSet:set2] or:condition3];
     XCTAssertEqual(set3.conditions.count, 4);
     
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
-    
-    MDDTokenDescription *description = [MDDConditionSet descriptionWithConditionSet:set3 tableInfo:tableInfo];
+    MDDDescription *description = [set3 SQLDescription];
     XCTAssertNotNil(description);
     
     NSLog(@"%@", description);

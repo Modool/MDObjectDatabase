@@ -7,29 +7,46 @@
 //
 
 #import "MDDFunctionQuery.h"
-#import "MDDAccessorConstants.h"
+#import "MDDQuery+Private.h"
+#import "MDDItem.h"
+#import "MDDRange.h"
+#import "MDDDescription.h"
 
 @implementation MDDFunctionQuery
 
-+ (instancetype)functionQueryWithFunction:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;{
-    return [self functionQueryWithKey:nil function:function conditionSet:conditionSet];
++ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key;{
+    return [self fuctionQueryWithKey:key conditionSet:nil];
 }
 
-+ (instancetype)functionQueryWithKey:(NSString *)key function:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;{
-    MDDFunctionQuery *query = [[self alloc] init];
-    query->_key = [key copy];
-    query->_function = [function copy];
-    query->_conditionSet = conditionSet;
++ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key conditionSet:(MDDConditionSet *)conditionSet;{
+    return [self fuctionQueryWithKey:key set:nil conditionSet:conditionSet];
+}
+
++ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet;{
+    return [self fuctionQueryWithKey:key set:set conditionSet:conditionSet alias:nil];
+}
+
++ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key alias:(NSString *)alias;{
+    return [self fuctionQueryWithKey:key conditionSet:nil alias:alias];
+}
+
++ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;{
+    return [self fuctionQueryWithKey:key set:nil conditionSet:conditionSet alias:alias];
+}
+
++ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;{
+    MDDFunctionQuery *query = [self queryWithKeys:(id)[NSSet setWithObject:key] set:set conditionSet:conditionSet sorts:nil range:NSRangeZore transform:^id(NSDictionary *result) {
+        return key.alias ? result[key.alias] : result;
+    }];
+    query->_alias = alias;
     
     return query;
 }
 
-+ (instancetype)sumQueryWithConditionSet:(MDDConditionSet *)conditionSet;{
-    return [self sumQueryWithKey:nil conditionSet:conditionSet];
-}
-
-+ (instancetype)sumQueryWithKey:(NSString *)key conditionSet:(MDDConditionSet *)conditionSet;{
-    return [self functionQueryWithKey:key function:MDDFunctionSUM conditionSet:conditionSet];
+- (MDDDescription *)SQLDescription{
+    MDDDescription *description = [super SQLDescription];
+    if (_alias) return [MDDDescription descriptionWithSQL:[NSString stringWithFormat:@" ( %@ ) AS %@", [description SQL], _alias] values:[description values]];
+    return description;
 }
 
 @end

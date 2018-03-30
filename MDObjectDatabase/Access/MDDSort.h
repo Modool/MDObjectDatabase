@@ -12,7 +12,9 @@
 
 @property (nonatomic, assign, readonly) BOOL ascending;
 
-+ (instancetype)sortWithKey:(NSString *)key ascending:(BOOL)ascending;
++ (instancetype)sortWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key ascending:(BOOL)ascending;
+
++ (MDDDescription *)descriptionWithSorts:(NSArray<MDDSort *> *)sorts;
 
 @end
 

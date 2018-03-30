@@ -8,8 +8,10 @@
 //
 
 #import "MDDUpdater.h"
-#import "MDDSetter.h"
 #import "MDDTableInfo.h"
+#import "MDDConditionSet.h"
+#import "MDDDescription.h"
+#import "MDDSetter.h"
 
 @implementation MDDUpdater
 
@@ -18,33 +20,52 @@
 }
 
 + (instancetype)updaterWithSetter:(NSArray<MDDSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;{
-    MDDUpdater *descriptor = [self new];
+    MDDUpdater *descriptor = [self descriptorWithTableInfo:[[setters firstObject] tableInfo]];
     descriptor->_setters = [setters copy];
     descriptor->_conditionSet = conditionSet;
     
     return descriptor;
 }
 
-+ (instancetype)updaterWithObject:(NSObject<MDDObject> *)object tableInfo:(MDDTableInfo *)tableInfo;{
++ (instancetype)updaterWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;{
     return [self updaterWithObject:object properties:nil ignoredProperties:nil conditionSet:nil tableInfo:tableInfo];
 }
 
-+ (instancetype)updaterWithObject:(NSObject<MDDObject> *)object properties:(NSSet *)properties tableInfo:(MDDTableInfo *)tableInfo;{
++ (instancetype)updaterWithObject:(id)object properties:(NSSet *)properties tableInfo:(MDDTableInfo *)tableInfo;{
     return [self updaterWithObject:object properties:properties ignoredProperties:nil conditionSet:nil tableInfo:tableInfo];
 }
 
-+ (instancetype)updaterWithObject:(NSObject<MDDObject> *)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;{
++ (instancetype)updaterWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;{
     
-    NSArray<MDDSetter *> *setters = [MDDSetter settersWithModel:object properties:properties ignoredProperties:ignoredProperties tableInfo:tableInfo];
+    NSArray<MDDSetter *> *setters = [MDDSetter settersWithObject:object properties:properties ignoredProperties:ignoredProperties tableInfo:tableInfo];
     NSParameterAssert(setters && [setters count]);
     
-    return [MDDUpdater updaterWithSetter:setters conditionSet:conditionSet];
+    return [self updaterWithSetter:setters conditionSet:conditionSet];
 }
 
-- (NSString *)descriptionWithTableInfo:(MDDTableInfo *)tableInfo value:(id *)value;{
-    NSParameterAssert(tableInfo);
+- (MDDDescription *)SQLDescription{
+    NSMutableString *SQL = [NSMutableString stringWithFormat:@" UPDATE %@ ", [[self tableInfo] tableName]];
     
-    return [NSString stringWithFormat:@" UPDATE %@ ", [tableInfo tableName]];
+    NSMutableArray *values = [NSMutableArray array];
+    MDDDescription *description = [MDDSetter descriptionWithSetters:[self setters]];
+    NSParameterAssert(description);
+    
+    if ([description SQL]) {
+        [SQL appendFormat:@" SET %@ ", [description SQL]];
+        [values addObjectsFromArray:[description values]];
+    }
+    
+    description = [[self conditionSet] SQLDescription];
+    if ([description SQL]) {
+        [SQL appendFormat:@" WHERE %@ ", [description SQL]];
+        [values addObjectsFromArray:[description values]];
+    }
+    
+    return [MDDDescription descriptionWithSQL:SQL values:values];
+}
+
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"setters", @"conditionSet"]] description];
 }
 
 @end

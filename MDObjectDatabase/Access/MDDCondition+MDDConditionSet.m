@@ -19,24 +19,24 @@
     return [MDDConditionSet setWithConditions:@[condition, self] operation:MDDConditionOperationOr];
 }
 
-+ (NSArray<MDDCondition *> *)conditionsWithKey:(NSString *)key integerRange:(MDDIntegerRange)integerRange;{
-    return [self conditionsWithKey:key integerRange:integerRange positive:YES];
++ (NSArray<MDDCondition *> *)conditionsWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key integerRange:(MDDIntegerRange)integerRange;{
+    return [self conditionsWithTableInfo:tableInfo key:key integerRange:integerRange positive:YES];
 }
 
-+ (NSArray<MDDCondition *> *)conditionsWithKey:(NSString *)key integerRange:(MDDIntegerRange)integerRange positive:(BOOL)positive;{
-    MDDCondition *condition1 = [self conditionWithKey:key value:@(integerRange.minimum) operation:positive ? MDDOperationGreaterThanOrEqual : MDDOperationLessThanOrEqual];
-    MDDCondition *condition2 = [self conditionWithKey:key value:@(integerRange.maximum) operation:positive ? MDDOperationLessThanOrEqual : MDDOperationGreaterThanOrEqual];
++ (NSArray<MDDCondition *> *)conditionsWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key integerRange:(MDDIntegerRange)integerRange positive:(BOOL)positive;{
+    MDDCondition *condition1 = [self conditionWithTableInfo:tableInfo key:key value:@(integerRange.minimum) operation:positive ? MDDOperationGreaterThanOrEqual : MDDOperationLessThanOrEqual];
+    MDDCondition *condition2 = [self conditionWithTableInfo:tableInfo key:key value:@(integerRange.maximum) operation:positive ? MDDOperationLessThanOrEqual : MDDOperationGreaterThanOrEqual];
     
     return @[condition1, condition2];
 }
 
-+ (NSArray<MDDCondition *> *)conditionsWithKey:(NSString *)key floatRange:(MDDFloatRange)floatRange;{
-    return [self conditionsWithKey:key floatRange:floatRange positive:YES];
++ (NSArray<MDDCondition *> *)conditionsWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key floatRange:(MDDFloatRange)floatRange;{
+    return [self conditionsWithTableInfo:tableInfo key:key floatRange:floatRange positive:YES];
 }
 
-+ (NSArray<MDDCondition *> *)conditionsWithKey:(NSString *)key floatRange:(MDDFloatRange)floatRange positive:(BOOL)positive;{
-    MDDCondition *condition1 = [self conditionWithKey:key value:@(floatRange.minimum) operation:positive ? MDDOperationGreaterThanOrEqual : MDDOperationLessThanOrEqual];
-    MDDCondition *condition2 = [self conditionWithKey:key value:@(floatRange.maximum) operation:positive ? MDDOperationLessThanOrEqual : MDDOperationGreaterThanOrEqual];
++ (NSArray<MDDCondition *> *)conditionsWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key floatRange:(MDDFloatRange)floatRange positive:(BOOL)positive;{
+    MDDCondition *condition1 = [self conditionWithTableInfo:tableInfo key:key value:@(floatRange.minimum) operation:positive ? MDDOperationGreaterThanOrEqual : MDDOperationLessThanOrEqual];
+    MDDCondition *condition2 = [self conditionWithTableInfo:tableInfo key:key value:@(floatRange.maximum) operation:positive ? MDDOperationLessThanOrEqual : MDDOperationGreaterThanOrEqual];
     
     return @[condition1, condition2];
 }
