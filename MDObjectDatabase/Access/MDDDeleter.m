@@ -27,10 +27,10 @@
 - (MDDDescription *)SQLDescription{
     NSMutableString *SQL = [NSMutableString stringWithFormat:@" DELETE FROM %@ ", [[self tableInfo] name]];
     
-    NSArray *values = @[];
+    NSMutableArray *values = [NSMutableArray array];
     MDDDescription *description = [[self conditionSet] SQLDescription];
     if ([description SQL]) {
-        values = [values arrayByAddingObjectsFromArray:[description values]];
+        [values addObjectsFromArray:[description values]];
         [SQL appendFormat:@" WHERE %@ ", [description SQL]];
     }
     

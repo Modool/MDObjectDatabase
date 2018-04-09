@@ -12,7 +12,7 @@
 #import "MDPropertyAttributes.h"
 
 @implementation MDDViewInfo
-@synthesize objectClass = _objectClass, name = _name, primaryProperties = _primaryProperties, propertyColumnMapper = _propertyColumnMapper, columnPropertyMapper = _columnPropertyMapper, columnMapper = _columnMapper;
+@synthesize objectClass = _objectClass, name = _name, primaryProperties, propertyColumnMapper = _propertyColumnMapper, columnPropertyMapper = _columnPropertyMapper, columnMapper = _columnMapper;
 
 + (instancetype)infoWithConfiguration:(MDDViewConfiguration *)configuration error:(NSError **)error;{
     Class<MDDObject> objectClass = [configuration objectClass];

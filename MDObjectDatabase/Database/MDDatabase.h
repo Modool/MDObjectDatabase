@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 
 @protocol MDDTableInfo, MDDObject, MDDReferenceDatabaseQueue;
-@class MDDTableConfiguration, MDDCompat;
+@class MDDTableConfiguration, MDDViewConfiguration, MDDCompat;
 @interface MDDatabase : NSObject
 
 + (instancetype)databaseWithDatabaseQueue:(id<MDDReferenceDatabaseQueue>)queue;
@@ -22,6 +22,6 @@
 - (void)close;
 
 - (MDDCompat *)addTableConfiguration:(MDDTableConfiguration *)configuration error:(NSError **)error;
-- (MDDCompat *)addViewConfiguration:(MDDTableConfiguration *)configuration error:(NSError **)error;
+- (MDDCompat *)addViewConfiguration:(MDDViewConfiguration *)configuration error:(NSError **)error;
 
 @end

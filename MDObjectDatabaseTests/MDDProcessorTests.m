@@ -75,11 +75,14 @@
         MDDSort *sort1 = [MDDSort sortWithTableInfo:[processor tableInfo] property:@MDDKeyPath(MDDTestClass, objectID) ascending:YES];
         MDDQuery *subQuery = [MDDQuery queryWithPropertys:nil conditionSet:condition1 sorts:@[sort1]];
         
-        MDDConditionSet *condition2 = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:[processor tableInfo] primaryValue:@"20" operation:MDDOperationLessThan]];
-        MDDSort *sort2 = [MDDSort sortWithTableInfo:[processor tableInfo] property:@MDDKeyPath(MDDTestClass, objectID) ascending:NO];
-                                      
         MDDSet *set = [MDDSet setWithDescriptor:subQuery alias:@"sub_query"];
-        MDDQuery *query = [MDDQuery queryWithPropertys:nil set:set conditionSet:condition2 sorts:@[sort2] range:NSRangeZore objectClass:[MDDTestClass class]];
+        
+        MDDCondition *condition2 = MDDConditionPrimary2([processor tableInfo], @"20", MDDOperationLessThan);
+        MDDConditionSet *conditionSet = MDDConditionSet1(condition2);
+        
+        MDDSort *sort2 = [MDDSort sortWithTableInfo:[processor tableInfo] property:@MDDKeyPath(MDDTestClass, objectID) ascending:NO];
+        
+        MDDQuery *query = [MDDQuery queryWithPropertys:nil set:set conditionSet:conditionSet sorts:@[sort2] range:NSRangeZore objectClass:[MDDTestClass class]];
         
         [processor executeQuery:query block:^(id result) {
             [objects addObject:result];
@@ -109,7 +112,7 @@
 - (void)testQueryByUnionTableAsProperty {
     NSMutableArray<MDDTestClass *> *objects = [NSMutableArray array];
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
-        MDDFunctionQuery *keyQuery = [MDDFunctionQuery fuctionQueryWithProperty:[MDDFuntionProperty itemWithTableInfo:[processor tableInfo] name:@MDDKeyPath(MDDTestClass, objectID) function:MDDFunctionSUM] alias:@"integer_value"];
+        MDDFunctionQuery *keyQuery = [MDDFunctionQuery fuctionQueryWithProperty:[MDDFuntionProperty propertyWithTableInfo:[processor tableInfo] name:@MDDKeyPath(MDDTestClass, objectID) function:MDDFunctionSUM] alias:@"integer_value"];
         MDDItem *property = [MDDItem itemWithDescriptor:keyQuery];
     
         MDDConditionSet *condition1 = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:[processor tableInfo] primaryValue:@"10" operation:MDDOperationGreaterThan]];
@@ -154,6 +157,18 @@
     }];
     XCTAssert(object);
     XCTAssert([object.text isEqualToString:@"hhhh"]);
+}
+
+- (void)testUpdateValueWithQuery {
+    __block BOOL state = NO;
+    [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
+        MDDFuntionProperty *property = [MDDFuntionProperty propertyWithTableInfo:processor.tableInfo name:@MDDKeyPath(MDDTestClass, integerValue) function:MDDFunctionSUM];
+        MDDFunctionQuery *query = [MDDFunctionQuery fuctionQueryWithProperty:property];
+        MDDValue *value = [MDDValue itemWithDescriptor:query];
+        
+        state = [processor updateWithPrimaryValue:@"1" property:@MDDKeyPath(MDDTestClass, floatValue) value:value];
+    }];
+    XCTAssert(state);
 }
 
 - (void)testDelete {

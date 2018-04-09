@@ -121,6 +121,10 @@
     return value;
 }
 
+- (id<MDDTableInfo>)tableInfo{
+    return [super tableInfo] ?: [[self conditionSet] tableInfo];
+}
+
 - (NSString *)description{
     return [[self dictionaryWithValuesForKeys:@[@"tableInfo", @"set", @"conditionSet", @"range", @"property", @"sorts"]] description];
 }
@@ -158,7 +162,9 @@
     }
     NSMutableString *SQL = [NSMutableString stringWithFormat:@" SELECT %@ FROM %@ %@ ", property, tableSet, indexString];
     
-    description = [[self conditionSet] SQLDescription];
+    if (self.set) description = [[self conditionSet] SQLDescriptionInSet:self.set];
+    else description = [[self conditionSet] SQLDescription];
+     
     if ([description SQL]) {
         [SQL appendFormat:@" WHERE %@ ", [description SQL]];
         [values addObjectsFromArray:description.values];

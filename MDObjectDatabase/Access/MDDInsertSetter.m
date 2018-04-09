@@ -53,8 +53,9 @@
         if ([value isKindOfClass:[MDDValue class]]) {
             MDDValue *_value = value;
             MDDDescription *description = [_value SQLDescription];
+            
             [columns addObject:[description SQL]];
-            [values addObject:[description values]];
+            [values addObjectsFromArray:[description values]];
         } else {
             MDDColumn *column = [setter.tableInfo columnForProperty:property];
             NSParameterAssert(column);

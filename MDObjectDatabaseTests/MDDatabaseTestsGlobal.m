@@ -86,20 +86,20 @@
         FMDatabaseQueue *databaseQueue = [[FMDatabaseQueue alloc] initWithPath:filepath];
         database = [center requrieDatabaseWithDatabaseQueue:databaseQueue];
         
-        MDDTableConfiguration *configuration = [MDDTableConfiguration configurationWithClass:[MDDTestClass class] propertyMapper:[MDDTestClass tableMapper] primaryProperty:@"objectID"];
+        MDDTableConfiguration *tableConfiguration = [MDDTableConfiguration configurationWithClass:[MDDTestClass class] propertyMapper:[MDDTestClass tableMapper] primaryProperty:@"objectID"];
         NSError *error = nil;
-        MDDCompat *compat = [database addTableConfiguration:configuration error:&error];
+        MDDCompat *compat = [database addTableConfiguration:tableConfiguration error:&error];
         
-        configuration = [MDDTableConfiguration configurationWithClass:[MDDUser class] primaryProperty:@"objectID"];
-        compat = [database addTableConfiguration:configuration error:&error];
+        tableConfiguration = [MDDTableConfiguration configurationWithClass:[MDDUser class] primaryProperty:@"objectID"];
+        compat = [database addTableConfiguration:tableConfiguration error:&error];
         
-        configuration = [MDDTableConfiguration configurationWithClass:[MDDGrade class] primaryProperty:@"objectID"];
-        compat = [database addTableConfiguration:configuration error:&error];
+        tableConfiguration = [MDDTableConfiguration configurationWithClass:[MDDGrade class] primaryProperty:@"objectID"];
+        compat = [database addTableConfiguration:tableConfiguration error:&error];
         
         id<MDDTableInfo> userInfo = [database requireInfoWithClass:[MDDUser class] error:nil];
         id<MDDTableInfo> gradeInfo = [database requireInfoWithClass:[MDDGrade class] error:nil];
         
-        MDDValue *value = [MDDValue itemWithTableInfo:gradeInfo names:NSSetObject(@MDDKeyPath(MDDGrade, objectID))];
+        MDDValue *value = [MDDConditionValue itemWithTableInfo:userInfo names:NSSetObject(@MDDKeyPath(MDDUser, gradeID))];
         MDDConditionSet *condition = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:gradeInfo primaryValue:value]];
         MDDViewConfiguration *viewConfiguration = [MDDViewConfiguration configurationWithClass:[MDDUserGradeInfo class] name:NSStringFromClass([MDDUserGradeInfo class]) propertyMapper:[MDDUserGradeInfo tableMapper] propertyColumns:nil conditionSet:condition];
         
@@ -111,7 +111,7 @@
         [viewConfiguration addColumn:[gradeInfo columnForProperty:@MDDKeyPath(MDDGrade, name)] asPropertyNamed:@MDDKeyPath(MDDUserGradeInfo, gradeName) error:nil];
         [viewConfiguration addColumn:[gradeInfo columnForProperty:@MDDKeyPath(MDDGrade, level)] asPropertyNamed:@MDDKeyPath(MDDUserGradeInfo, gradeLevel) error:nil];
         
-        compat = [database addTableConfiguration:configuration error:&error];
+        compat = [database addViewConfiguration:viewConfiguration error:&error];
         
         [database prepare];
     });

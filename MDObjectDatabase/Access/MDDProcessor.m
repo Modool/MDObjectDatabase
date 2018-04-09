@@ -495,7 +495,7 @@
 }
 
 - (id)queryWithProperty:(NSString *)propertyName function:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;{
-    MDDFuntionProperty *property = [MDDFuntionProperty itemWithTableInfo:_tableInfo name:propertyName function:function alias:@"function_result"];
+    MDDFuntionProperty *property = [MDDFuntionProperty propertyWithTableInfo:_tableInfo name:propertyName function:function alias:@"function_result"];
     MDDFunctionQuery *query = [MDDFunctionQuery fuctionQueryWithProperty:property conditionSet:conditionSet];
     
     __block id result = nil;

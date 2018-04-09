@@ -33,4 +33,6 @@
 
 + (MDDDescription *)descriptionWithConditions:(NSArray<MDDCondition *> *)conditions operation:(MDDConditionOperation)operation;
 
+- (MDDDescription *)SQLDescriptionInSet:(MDDSet *)set;
+
 @end

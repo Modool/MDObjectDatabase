@@ -73,11 +73,11 @@
 
 @implementation MDDFuntionProperty
 
-+ (instancetype)itemWithTableInfo:(MDDTableInfo *)tableInfo name:(NSString *)name function:(MDDFunction)function;{
-    return [self itemWithTableInfo:tableInfo name:name function:function  alias:nil];
++ (instancetype)propertyWithTableInfo:(MDDTableInfo *)tableInfo name:(NSString *)name function:(MDDFunction)function;{
+    return [self propertyWithTableInfo:tableInfo name:name function:function  alias:nil];
 }
 
-+ (instancetype)itemWithTableInfo:(MDDTableInfo *)tableInfo name:(NSString *)name function:(MDDFunction)function alias:(NSString *)alias;{
++ (instancetype)propertyWithTableInfo:(MDDTableInfo *)tableInfo name:(NSString *)name function:(MDDFunction)function alias:(NSString *)alias;{
     MDDFuntionProperty *property = [super itemWithTableInfo:tableInfo names:[NSSet setWithObject:name]];
     property.alias = [alias copy];
     property->_function = function;
@@ -129,8 +129,14 @@
     return set;
 }
 
-- (NSString *)description{
-    return [[self dictionaryWithValuesForKeys:@[@"descriptor", @"alias"]] description];
+- (id<MDDTableInfo>)tableInfo{
+    return [[self descriptor] tableInfo] ?: [super tableInfo];
+}
+
+- (NSString *)name{
+    id<MDDTableInfo> tableInfo = [self tableInfo];
+    
+    return [self alias] ?: [tableInfo name];
 }
 
 - (MDDDescription *)SQLDescription{
@@ -146,9 +152,65 @@
     return nil;
 }
 
+- (NSString *)description{
+    return [[self dictionaryWithValuesForKeys:@[@"descriptor", @"alias"]] description];
+}
+
 @end
 
 @implementation MDDValue
+
+- (MDDDescription *)SQLDescription{
+    if (self.descriptor) {
+        MDDDescription *description = self.descriptor.SQLDescription;
+        NSString *SQL = [description SQL];
+        if (self.alias) SQL = [NSString stringWithFormat:@" ( %@ ) AS %@ ", SQL, self.alias];
+        
+        SQL = [NSString stringWithFormat:@" ( %@ )", SQL];
+        return [MDDDescription descriptionWithSQL:SQL values:description.values];
+    }
+    if (self.names.count && self.tableInfo) {
+        NSSet *primaryProperties = [self.tableInfo respondsToSelector:@selector(primaryProperties)] ? self.tableInfo.primaryProperties : [NSSet set];
+        NSDictionary *mapper = self.tableInfo.propertyColumnMapper;
+        NSArray<NSString *> *properties = [self.names.allObjects MDDItemMap:^id(id property) {
+            if (property != [NSNull null]) return property;
+            else {
+                NSParameterAssert([primaryProperties count]);
+                return [primaryProperties anyObject];
+            }
+        }];
+        NSArray<NSString *> *columnNames = [mapper objectsForKeys:properties notFoundMarker:@""];
+        NSString *SQL = [NSString stringWithFormat:@" ( %@ )", [columnNames componentsJoinedByString:@", "]];
+        
+        return [MDDDescription descriptionWithSQL:SQL];
+    }
+    return nil;
+}
+
+@end
+
+@implementation MDDConditionValue
+
+- (MDDDescription *)SQLDescription{
+    if (self.descriptor) return super.SQLDescription;
+    if (self.names.count && self.tableInfo) {
+        NSSet *primaryProperties = [self.tableInfo respondsToSelector:@selector(primaryProperties)] ? self.tableInfo.primaryProperties : [NSSet set];
+        NSDictionary *mapper = self.tableInfo.propertyColumnMapper;
+        NSArray<NSString *> *properties = [self.names.allObjects MDDItemMap:^id(id property) {
+            if (property != [NSNull null]) return property;
+            else {
+                NSParameterAssert([primaryProperties count]);
+                return [primaryProperties anyObject];
+            }
+        }];
+        NSArray<NSString *> *columnNames = [mapper objectsForKeys:properties notFoundMarker:@""];
+        NSString *SQL = [columnNames componentsJoinedByString:[NSString stringWithFormat:@", %@.", self.tableInfo.name]];
+        SQL = [NSString stringWithFormat:@"%@.%@", SQL, self.tableInfo.name];
+        
+        return [MDDDescription descriptionWithSQL:SQL];
+    }
+    return nil;
+}
 
 @end
 

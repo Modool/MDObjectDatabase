@@ -53,8 +53,8 @@
         MDDValue *_value = value;
         MDDDescription *description = [_value SQLDescription];
         
-        replacement = [NSString stringWithFormat:@" ( %@ ) ", [description SQL]];
-        [values addObject:[description values]];
+        replacement = [description SQL];
+        [values addObjectsFromArray:[description values]];
     } else {
         value = [column transformValue:value];
         value = value ?: [NSNull null];

@@ -147,6 +147,42 @@
     return [MDDDescription descriptionWithSQL:SQL values:values];
 }
 
+- (MDDDescription *)SQLDescriptionInSet:(MDDSet *)set;{
+    if (!set) return [self SQLDescription];
+    
+    NSString *operation = MDConditionOperationDescription([self operation]);
+    
+    NSMutableString *SQL = [NSMutableString string];
+    NSMutableArray *values = [NSMutableArray array];
+    
+    NSArray<MDDConditionSet *> *sets = [self sets];
+    NSArray<MDDCondition *> *conditions = [self conditions];
+    
+    // ((a OR b OR c) AND (c OR d OR e) AND (f OR g OR h) ) OR (i AND j AND k)
+    [sets enumerateObjectsUsingBlock:^(MDDConditionSet *conditionSet, NSUInteger index, BOOL *stop) {
+        MDDDescription *description = [conditionSet SQLDescriptionInSet:set];
+        [SQL appendFormat:@" ( %@ ) %@", [description SQL], index < ([sets count] - 1) ? operation : @""];
+        [values addObjectsFromArray:[description values]];
+    }];
+    
+    NSString *separator = MDConditionOperationDescription(self.operation);
+    NSMutableArray *SQLs = [NSMutableArray array];
+    for (MDDCondition *condition in conditions) {
+        MDDDescription *description = [condition SQLDescriptionInSet:set];
+        
+        if (description) {
+            [SQLs addObject:[description SQL]];
+            [values addObjectsFromArray:[description values]];
+        }
+    }
+    MDDDescription *description = [MDDDescription descriptionWithSQL:[SQLs componentsJoinedByString:separator] values:values];
+    
+    [SQL appendFormat:@" %@ %@", [SQL length] ? operation : @"", [description SQL]];
+    [values addObjectsFromArray:[description values]];
+    
+    return [MDDDescription descriptionWithSQL:SQL values:values];
+}
+
 - (BOOL)isMultipleTable{
     return [[self mutableTableInfos] count] > 1;
 }

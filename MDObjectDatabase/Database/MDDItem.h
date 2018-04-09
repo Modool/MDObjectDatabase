@@ -34,8 +34,8 @@
 
 @property (nonatomic, copy, readonly) NSString *function;
 
-+ (instancetype)itemWithTableInfo:(id<MDDTableInfo>)tableInfo name:(NSString *)name function:(MDDFunction)function;
-+ (instancetype)itemWithTableInfo:(id<MDDTableInfo>)tableInfo name:(NSString *)name function:(MDDFunction)function alias:(NSString *)alias;
++ (instancetype)propertyWithTableInfo:(id<MDDTableInfo>)tableInfo name:(NSString *)name function:(MDDFunction)function;
++ (instancetype)propertyWithTableInfo:(id<MDDTableInfo>)tableInfo name:(NSString *)name function:(MDDFunction)function alias:(NSString *)alias;
 
 @end
 
@@ -43,6 +43,8 @@
 
 @property (nonatomic, strong, readonly) MDDDescriptor *descriptor;
 @property (nonatomic, copy, readonly) NSString *alias;
+
+@property (nonatomic, copy, readonly) NSString *name;
 
 + (instancetype)set;
 + (instancetype)setWithTableInfo:(id<MDDTableInfo>)tableInfo;
@@ -52,6 +54,10 @@
 @end
 
 @interface MDDValue : MDDItem
+
+@end
+
+@interface MDDConditionValue : MDDValue
 
 @end
 

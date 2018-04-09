@@ -214,6 +214,8 @@ NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
         }
     }
     self.infos[name] = info;
+    [[self compats] removeObjectForKey:name];
+    
     return YES;
 }
 
@@ -259,17 +261,16 @@ NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
     
     for (NSString *propertyName in propertyColumns) {
         MDDColumn *column = propertyColumns[propertyName];
+        id<MDDTableInfo> info = [column tableInfo];
+        
         NSString *origin = [column name];
         NSString *alisa = propertyMapper[propertyName];
-        if ([origin isEqualToString:alisa]) {
-            [columnNames addObject:origin];
-        } else {
-            [columnNames addObject:[NSString stringWithFormat:@" %@ AS %@ ", origin, alisa]];
-        }
+        
+        [columnNames addObject:[NSString stringWithFormat:@" %@.%@ AS %@ ", info.name, origin, alisa]];
         [tableNames addObject:[[column tableInfo] name]];
     }
     
-    NSString *querySQL = [NSString stringWithFormat:@"SELECT %@ FROM %@", [[columnNames allObjects] componentsJoinedByString:@","], [[tableNames allObjects] componentsJoinedByString:@","]];
+    NSString *querySQL = [NSString stringWithFormat:@" SELECT %@ FROM %@ ", [[columnNames allObjects] componentsJoinedByString:@" , "], [[tableNames allObjects] componentsJoinedByString:@" , "]];
     if ([configuration conditionSet]) {
         MDDDescription *description = [[configuration conditionSet] SQLDescription];
         querySQL = [querySQL stringByAppendingFormat:@" WHERE %@ ", [description normalizedSQL]];

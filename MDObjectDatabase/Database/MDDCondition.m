@@ -92,13 +92,71 @@
         column = [self.tableInfo columnForProperty:self.property];
         NSParameterAssert(column);
         
-        columnName = column.name;
+        columnName = [NSString stringWithFormat:@"%@.%@", column.tableInfo.name, column.name];
     }
     if ([[self value] isKindOfClass:[MDDValue class]]) {
         MDDValue *_value = value;
         MDDDescription *descrition = [_value SQLDescription];
         
-        replacement = [NSString stringWithFormat:@" ( %@ ) ", [descrition SQL]];
+        replacement = [descrition SQL];
+        [values addObjectsFromArray:[descrition values]];
+    } else if (column){
+        BOOL set = ([value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSSet class]]);
+        
+        value = set ? value : [column transformValue:value];
+        value = value ?: [NSNull null];
+        
+        if (![_transforms count]) [values addObject:value];
+    }
+    
+    for (NSString *tranform in _transforms) {
+        columnName = [NSString stringWithFormat:@"(%@ %@)", columnName, tranform];
+    }
+    
+    NSString *token = MDDatabaseToken;
+    BOOL isSetOperation = (_operation == MDDOperationIn || _operation == MDDOperationNotIn);
+    if (isSetOperation) {
+        NSArray *tokens = [(NSArray *)value MDDItemMap:^id(id object) {
+            return MDDatabaseToken;
+        }];
+        token = [NSString stringWithFormat:@"( %@ )", [tokens componentsJoinedByString:@","]];
+    } else if ([_transforms count]){
+        token = [value description];
+    }
+    
+    NSString *SQL = [self SQLWithColumnName:columnName value:value replacement:replacement token:token];
+    return [MDDDescription descriptionWithSQL:SQL values:values];
+}
+
+- (MDDDescription *)SQLDescriptionInSet:(MDDSet *)set;{
+    if (!set) return [self SQLDescription];
+    
+    id property = [self property];
+    id value = [self value];
+    
+    MDDColumn *column = nil;
+    NSString *columnName = nil;
+    NSString *replacement = nil;
+    NSMutableArray *values = [NSMutableArray array];
+    
+    if ([[self property] isKindOfClass:[MDDItem class]]) {
+        MDDDescription *descrition = [property SQLDescription];
+        
+        columnName = [NSString stringWithFormat:@" ( %@ ) ", [descrition SQL]];
+        [values addObjectsFromArray:[descrition values]];
+    } else {
+        column = [self.tableInfo columnForProperty:self.property];
+        NSParameterAssert(column);
+        NSString *tableName = column.tableInfo.name;
+        if (set.tableInfo == column.tableInfo) tableName = set.name;
+        
+        columnName = [NSString stringWithFormat:@"%@.%@", tableName, column.name];
+    }
+    if ([[self value] isKindOfClass:[MDDValue class]]) {
+        MDDValue *_value = value;
+        MDDDescription *descrition = [_value SQLDescription];
+        
+        replacement = [descrition SQL];
         [values addObjectsFromArray:[descrition values]];
     } else if (column){
         BOOL set = ([value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSSet class]]);
@@ -148,6 +206,7 @@
 
 + (MDDDescription *)descriptionWithConditions:(NSArray<MDDCondition *> *)conditions operation:(MDDConditionOperation)operation;{
     NSString *operationDescription = MDConditionOperationDescription(operation);
+    
     return [super descriptionWithDescriptors:conditions separator:[NSString stringWithFormat:@" %@ ", operationDescription]];
 }
 
