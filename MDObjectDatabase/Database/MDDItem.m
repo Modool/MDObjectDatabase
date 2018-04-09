@@ -205,7 +205,7 @@
         }];
         NSArray<NSString *> *columnNames = [mapper objectsForKeys:properties notFoundMarker:@""];
         NSString *SQL = [columnNames componentsJoinedByString:[NSString stringWithFormat:@", %@.", self.tableInfo.name]];
-        SQL = [NSString stringWithFormat:@"%@.%@", SQL, self.tableInfo.name];
+        SQL = [NSString stringWithFormat:@"%@.%@", self.tableInfo.name, SQL];
         
         return [MDDDescription descriptionWithSQL:SQL];
     }
