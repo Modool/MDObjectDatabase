@@ -12,30 +12,21 @@
 @class MDDColumnConfiguration;
 @interface MDDColumn ()
 
-@property (nonatomic, copy) NSString *name;
-
-@property (nonatomic, copy) NSString *propertyName;
-
-@property (nonatomic, assign, getter=isPrimary) BOOL primary;
-
-@property (nonatomic, assign, getter=isAutoincrement) BOOL autoincrement;
-
 @property (nonatomic, assign) MDDColumnType type;
-
-@property (nonatomic, strong) MDPropertyAttributes *attribute;
-
 @property (nonatomic, strong) MDDColumnConfiguration *configuration;
+
+@property (nonatomic, strong, readonly) MDPropertyAttributes *attribute;
 
 - (BOOL)isEqualLocalColumn:(MDDLocalColumn *)localColumn;
 
 @end
 
-@class MDDTableInfo;
+@protocol MDDTableInfo;
 @interface MDDLocalColumn ()
 
-+ (instancetype)columnWithName:(NSString *)name primary:(BOOL)primary autoincrement:(BOOL)autoincrement type:(MDDColumnType)type;
++ (instancetype)columnWithName:(NSString *)name primary:(BOOL)primary autoincrement:(BOOL)autoincrement type:(MDDColumnType)type tableInfo:(id<MDDTableInfo>)tableInfo;
 
-+ (NSDictionary<NSString *, MDDLocalColumn *> *)columnsWithSQL:(NSString *)SQL tableInfo:(MDDTableInfo *)tableInfo;
++ (NSDictionary<NSString *, MDDLocalColumn *> *)columnsWithSQL:(NSString *)SQL tableInfo:(id<MDDTableInfo>)tableInfo;
 
 @end
 

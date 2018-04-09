@@ -21,11 +21,6 @@ FOUNDATION_EXPORT const unsigned char MDObjectDatabaseVersionString[];
 #import <MDObjectDatabase/MDDAccessor.h>
 #import <MDObjectDatabase/MDDatabase+MDDAccessor.h>
 #import <MDObjectDatabase/MDDProcessor.h>
-#import <MDObjectDatabase/MDDDescriptor.h>
-#import <MDObjectDatabase/MDDKeyValueDescriptor.h>
-#import <MDObjectDatabase/MDDCondition.h>
-#import <MDObjectDatabase/MDDConditionSet.h>
-#import <MDObjectDatabase/MDDCondition+MDDConditionSet.h>
 #import <MDObjectDatabase/MDDSetter.h>
 #import <MDObjectDatabase/MDDInsertSetter.h>
 #import <MDObjectDatabase/MDDSort.h>
@@ -34,7 +29,6 @@ FOUNDATION_EXPORT const unsigned char MDObjectDatabaseVersionString[];
 #import <MDObjectDatabase/MDDDeleter.h>
 #import <MDObjectDatabase/MDDQuery.h>
 #import <MDObjectDatabase/MDDFunctionQuery.h>
-#import <MDObjectDatabase/MDDDescription.h>
 #import <MDObjectDatabase/MDDIndex.h>
 
 // Database
@@ -42,12 +36,20 @@ FOUNDATION_EXPORT const unsigned char MDObjectDatabaseVersionString[];
 #import <MDObjectDatabase/MDDObject.h>
 #import <MDObjectDatabase/MDDatabase.h>
 #import <MDObjectDatabase/MDDatabaseCenter.h>
+#import <MDObjectDatabase/MDDColumn.h>
 #import <MDObjectDatabase/MDDColumnConfiguration.h>
 #import <MDObjectDatabase/MDDTableInfo.h>
-#import <MDObjectDatabase/MDDColumn.h>
-#import <MDObjectDatabase/MDDConfiguration.h>
+#import <MDObjectDatabase/MDDTableConfiguration.h>
+#import <MDObjectDatabase/MDDViewInfo.h>
+#import <MDObjectDatabase/MDDViewConfiguration.h>
 #import <MDObjectDatabase/MDDCompat.h>
 #import <MDObjectDatabase/MDDErrorCode.h>
 #import <MDObjectDatabase/MDDReferenceDatabase.h>
+#import <MDObjectDatabase/MDDDescriptor.h>
+#import <MDObjectDatabase/MDDPropertyValueDescriptor.h>
+#import <MDObjectDatabase/MDDCondition.h>
+#import <MDObjectDatabase/MDDConditionSet.h>
+#import <MDObjectDatabase/MDDCondition+MDDConditionSet.h>
+#import <MDObjectDatabase/MDDDescription.h>
 
 

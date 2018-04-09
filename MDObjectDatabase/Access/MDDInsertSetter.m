@@ -20,7 +20,7 @@
 + (instancetype)setterWithModel:(id)object propertyName:(NSString *)propertyName tableInfo:(MDDTableInfo *)tableInfo;{
     NSParameterAssert(object && [propertyName length] && tableInfo);
     
-    return [self descriptorWithTableInfo:tableInfo key:propertyName value:[object valueForKey:propertyName]];
+    return [self descriptorWithTableInfo:tableInfo property:propertyName value:[object valueForKey:propertyName]];
 }
 
 + (NSArray<MDDInsertSetter *> *)settersWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;{
@@ -32,7 +32,7 @@
         
         if ([column isPrimary] && !value) continue;
         
-        MDDInsertSetter *setter = [self descriptorWithTableInfo:tableInfo key:[column propertyName] value:value];
+        MDDInsertSetter *setter = [self descriptorWithTableInfo:tableInfo property:[column propertyName] value:value];
         if (!setter) continue;
         
         [setters addObject:setter];
@@ -48,7 +48,7 @@
     NSMutableArray *values = [NSMutableArray array];
     
     for (MDDInsertSetter *setter in setters) {
-        id key = [setter key];
+        id property = [setter property];
         id value = [setter value];
         if ([value isKindOfClass:[MDDValue class]]) {
             MDDValue *_value = value;
@@ -56,7 +56,7 @@
             [columns addObject:[description SQL]];
             [values addObject:[description values]];
         } else {
-            MDDColumn *column = [setter.tableInfo columnForKey:key];
+            MDDColumn *column = [setter.tableInfo columnForProperty:property];
             NSParameterAssert(column);
             value = [column transformValue:value];
             value = value ?: [NSNull null];

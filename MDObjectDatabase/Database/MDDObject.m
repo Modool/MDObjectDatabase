@@ -12,18 +12,18 @@
 
 @implementation NSObject (MDDatabase)
 
-- (id)primaryValurWithTableInfo:(MDDTableInfo *)tableInfo;{
+- (id)primaryValurWithTableInfo:(id<MDDTableInfo>)tableInfo;{
     NSSet *primaryProperties = [tableInfo primaryProperties];
-    NSString *primaryKey = [primaryProperties count] == 1 ? [primaryProperties anyObject] : nil;
+    NSString *primaryProperty = [primaryProperties count] == 1 ? [primaryProperties anyObject] : nil;
     
-    return primaryKey ? [self valueForKey:primaryKey] : nil;
+    return primaryProperty ? [self valueForKey:primaryProperty] : nil;
 }
 
-- (void)setPrimaryValue:(id)value tableInfo:(MDDTableInfo *)tableInfo;{
+- (void)setPrimaryValue:(id)value tableInfo:(id<MDDTableInfo>)tableInfo;{
     NSSet *primaryProperties = [tableInfo primaryProperties];
-    NSString *primaryKey = [primaryProperties count] == 1 ? [primaryProperties anyObject] : nil;
+    NSString *primaryProperty = [primaryProperties count] == 1 ? [primaryProperties anyObject] : nil;
     
-    if (primaryKey && ![self valueForKey:primaryKey]) [self setValue:value forKey:primaryKey];
+    if (primaryProperty && ![self valueForKey:primaryProperty]) [self setValue:value forKey:primaryProperty];
 }
 
 @end

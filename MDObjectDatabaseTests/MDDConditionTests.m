@@ -20,7 +20,7 @@
 @implementation MDDConditionTests
 
 - (void)testPrimaryValue {
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    id<MDDTableInfo> tableInfo = [[MDDatabaseTestsGlobal database] requireInfoWithClass:[MDDTestClass class] error:nil];
     
     MDDCondition *condition = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"123"];
     MDDDescription *description = [condition SQLDescription];
@@ -30,9 +30,9 @@
     XCTAssertEqual(description.values.firstObject, @"123");
 }
 
-- (void)testKeyValue {
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
-    MDDCondition *condition = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+- (void)testPropertyValue {
+    id<MDDTableInfo> tableInfo = [[MDDatabaseTestsGlobal database] requireInfoWithClass:[MDDTestClass class] error:nil];
+    MDDCondition *condition = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
     MDDDescription *description = [condition SQLDescription];
     
     XCTAssertNotNil(description);
@@ -41,12 +41,12 @@
 }
 
 - (void)testConditionSet_AND_OR {
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    id<MDDTableInfo> tableInfo = [[MDDatabaseTestsGlobal database] requireInfoWithClass:[MDDTestClass class] error:nil];
     
-    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
+    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
     MDDCondition *condition3 = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, text) value:@"text"];
+    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4]];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4]];
@@ -59,12 +59,12 @@
 }
 
 - (void)testConditionSet_OR_AND {
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    id<MDDTableInfo> tableInfo = [[MDDatabaseTestsGlobal database] requireInfoWithClass:[MDDTestClass class] error:nil];
     
-    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
+    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
     MDDCondition *condition3 = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, text) value:@"text"];
+    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4] operation:MDDConditionOperationOr];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4] operation:MDDConditionOperationOr];
@@ -77,12 +77,12 @@
 }
 
 - (void)testConditionSet_AND_AND {
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    id<MDDTableInfo> tableInfo = [[MDDatabaseTestsGlobal database] requireInfoWithClass:[MDDTestClass class] error:nil];
     
-    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
+    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
     MDDCondition *condition3 = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, text) value:@"text"];
+    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4]];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4]];
@@ -97,12 +97,12 @@
 }
 
 - (void)testConditionSet_OR_OR {
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDTestClass class] error:nil];
+    id<MDDTableInfo> tableInfo = [[MDDatabaseTestsGlobal database] requireInfoWithClass:[MDDTestClass class] error:nil];
     
-    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
-    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
+    MDDCondition *condition1 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, integerValue) value:@123];
+    MDDCondition *condition2 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, boolValue) value:@YES];
     MDDCondition *condition3 = [MDDCondition conditionWithTableInfo:tableInfo primaryValue:@"3333"];
-    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo key:@MDDKeyPath(MDDTestClass, text) value:@"text"];
+    MDDCondition *condition4 = [MDDCondition conditionWithTableInfo:tableInfo property:@MDDKeyPath(MDDTestClass, text) value:@"text"];
     
     MDDConditionSet *set1 = [MDDConditionSet setWithConditions:@[condition1, condition4] operation:MDDConditionOperationOr];
     MDDConditionSet *set2 = [MDDConditionSet setWithConditions:@[condition2, condition4] operation:MDDConditionOperationOr];

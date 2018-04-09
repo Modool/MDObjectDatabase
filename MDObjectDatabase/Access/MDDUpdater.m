@@ -35,7 +35,7 @@
     return [self updaterWithObject:object properties:properties ignoredProperties:nil conditionSet:nil tableInfo:tableInfo];
 }
 
-+ (instancetype)updaterWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;{
++ (instancetype)updaterWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(id<MDDTableInfo>)tableInfo;{
     
     NSArray<MDDSetter *> *setters = [MDDSetter settersWithObject:object properties:properties ignoredProperties:ignoredProperties tableInfo:tableInfo];
     NSParameterAssert(setters && [setters count]);
@@ -44,7 +44,7 @@
 }
 
 - (MDDDescription *)SQLDescription{
-    NSMutableString *SQL = [NSMutableString stringWithFormat:@" UPDATE %@ ", [[self tableInfo] tableName]];
+    NSMutableString *SQL = [NSMutableString stringWithFormat:@" UPDATE %@ ", [[self tableInfo] name]];
     
     NSMutableArray *values = [NSMutableArray array];
     MDDDescription *description = [MDDSetter descriptionWithSetters:[self setters]];

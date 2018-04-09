@@ -27,9 +27,9 @@
     [super tearDown];
 }
 
-- (void)testSingleKeyFromSQL {
+- (void)testSinglePropertyFromSQL {
     NSString *SQL = @"CREATE TABLE MDDUser (   objectID INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  ,  age INTEGER(200) NOT NULL  DEFAULT 10  CHECK(100),  name TEXT(200) ,  gradeID TEXT  , favor TEXT";
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDUser class] error:nil];
+    id<MDDTableInfo> tableInfo = [[MDDatabaseTestsGlobal database] requireInfoWithClass:[MDDUser class] error:nil];
     NSDictionary<NSString *, MDDLocalColumn *> *columns = [MDDLocalColumn columnsWithSQL:SQL tableInfo:tableInfo];
     XCTAssertEqual(columns.count, 5);
     
@@ -44,9 +44,9 @@
     XCTAssertEqual(column.type, MDDColumnTypeInteger);
 }
 
-- (void)testUnionKeyFromSQL {
+- (void)testUnionPropertyFromSQL {
     NSString *SQL = @"CREATE TABLE MDDUser ( PRIMARY KEY ( objectID , name ), objectID INTEGER NOT NULL  ,  name TEXT(200) ,  age INTEGER(200) NOT NULL  DEFAULT 10  CHECK(100),  gradeID TEXT  , favor TEXT";
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDUser class] error:nil];
+    id<MDDTableInfo> tableInfo = [[MDDatabaseTestsGlobal database] requireInfoWithClass:[MDDUser class] error:nil];
     NSDictionary<NSString *, MDDLocalColumn *> *columns = [MDDLocalColumn columnsWithSQL:SQL tableInfo:tableInfo];
     XCTAssertEqual(columns.count, 5);
     
@@ -61,9 +61,9 @@
     XCTAssertEqual(column.configuration.length, 200);
 }
 
-- (void)testCompositeKeyFromSQL {
+- (void)testCompositePropertyFromSQL {
     NSString *SQL = @"CREATE TABLE MDDUser ( CONSTRAINT private_key PRIMARY KEY ( objectID , name ), objectID INTEGER NOT NULL  ,  name TEXT(200) ,  age INTEGER(200) NOT NULL  DEFAULT 10  CHECK(100),  gradeID TEXT  , favor TEXT";
-    MDDTableInfo *tableInfo = [[MDDatabaseTestsGlobal database] requireTableInfoWithClass:[MDDUser class] error:nil];
+    id<MDDTableInfo> tableInfo = [[MDDatabaseTestsGlobal database] requireInfoWithClass:[MDDUser class] error:nil];
     NSDictionary<NSString *, MDDLocalColumn *> *columns = [MDDLocalColumn columnsWithSQL:SQL tableInfo:tableInfo];
     XCTAssertEqual(columns.count, 5);
     
@@ -71,13 +71,13 @@
     XCTAssert(column.primary);
     XCTAssertEqual(column.type, MDDColumnTypeInteger);
     XCTAssertEqual(column.configuration.nullabled, NO);
-    XCTAssertEqualObjects(column.configuration.compositeKeyName, @"private_key");
+    XCTAssertEqualObjects(column.configuration.compositePropertyName, @"private_key");
     
     column = columns[@"name"];
     XCTAssert(column.primary);
     XCTAssertEqual(column.type, MDDColumnTypeText);
     XCTAssertEqual(column.configuration.length, 200);
-    XCTAssertEqualObjects(column.configuration.compositeKeyName, @"private_key");
+    XCTAssertEqualObjects(column.configuration.compositePropertyName, @"private_key");
 }
 
 - (void)testPerformanceExample {

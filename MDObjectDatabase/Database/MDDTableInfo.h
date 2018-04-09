@@ -8,24 +8,34 @@
 
 #import "MDDObject.h"
 
-@class MDDColumn, MDDIndex, MDDConditionSet, MDDConfiguration;
-@interface MDDTableInfo : NSObject
+@protocol MDDItem;
+@class MDDColumn, MDDIndex, MDDConditionSet, MDDTableConfiguration;
+@protocol MDDTableInfo <NSObject>
 
 @property (nonatomic, copy, readonly) Class objectClass;
-@property (nonatomic, copy, readonly) NSString *tableName;
-
-@property (nonatomic, copy, readonly) NSSet<NSString *> *primaryProperties;
+@property (nonatomic, copy, readonly) NSString *name;
 
 @property (nonatomic, copy, readonly) NSArray<NSString *> *columnNames;
 @property (nonatomic, copy, readonly) NSArray<MDDColumn *> *columns;
 
+@property (nonatomic, copy, readonly) NSDictionary<NSString *, NSString *> *propertyColumnMapper;
+@property (nonatomic, copy, readonly) NSDictionary<NSString *, NSString *> *columnPropertyMapper;
+
+- (MDDColumn *)columnForProperty:(id)property;
+
+@optional
+@property (nonatomic, copy, readonly) NSSet<NSString *> *primaryProperties;
+
+- (MDDIndex *)indexForPropertys:(NSSet<NSString *> *)property;
+- (MDDIndex *)indexForConditionSet:(MDDConditionSet *)conditionSet;
+
+@end
+
+@interface MDDTableInfo : NSObject <MDDTableInfo>
+
 @property (nonatomic, copy, readonly) NSArray<NSString *> *indexNames;
 @property (nonatomic, copy, readonly) NSArray<MDDIndex *> *indexes;
 
-+ (instancetype)infoWithConfiguration:(MDDConfiguration *)configuration error:(NSError **)error;
-
-- (MDDColumn *)columnForKey:(id)key;
-- (MDDIndex *)indexForKeys:(NSSet<NSString *> *)keys;
-- (MDDIndex *)indexForConditionSet:(MDDConditionSet *)conditionSet;
++ (instancetype)infoWithConfiguration:(MDDTableConfiguration *)configuration error:(NSError **)error;
 
 @end

@@ -336,7 +336,7 @@ Method MDImmediateInstanceMethod(Class aClass, SEL aSelector) {
     return foundMethod;
 }
 
-NSArray<MDPropertyAttributes *> *MDPropertyAttributesForCurrentClass(Class<NSObject> class){
+NSArray<MDPropertyAttributes *> *MDPropertyAttributesForCurrentClass(Class class){
     unsigned int count = 0;
     objc_property_t *properties = class_copyPropertyList(class, &count);
     
@@ -354,7 +354,7 @@ NSArray<MDPropertyAttributes *> *MDPropertyAttributesForCurrentClass(Class<NSObj
     return [resultProperties copy];
 }
 
-NSArray<MDPropertyAttributes *> *MDPropertyAttributesForClass(Class<NSObject> class, BOOL containedSuperClass){
+NSArray<MDPropertyAttributes *> *MDPropertyAttributesForClass(Class class, BOOL containedSuperClass){
     if (!containedSuperClass) return MDPropertyAttributesForCurrentClass(class);
     
     NSMutableArray<MDPropertyAttributes *> *resultProperties = [NSMutableArray<MDPropertyAttributes *> array];
@@ -369,7 +369,7 @@ NSArray<MDPropertyAttributes *> *MDPropertyAttributesForClass(Class<NSObject> cl
     return [resultProperties copy];
 }
 
-NSArray<MDPropertyAttributes *> *MDPropertyAttributesNamed(Class<NSObject> class, NSArray<NSString *> *names){
+NSArray<MDPropertyAttributes *> *MDPropertyAttributesNamed(Class class, NSArray<NSString *> *names){
     NSMutableArray<MDPropertyAttributes *> *attributes = [NSMutableArray array];
     for (NSString *name in names) {
         objc_property_t property = class_getProperty(class, [name UTF8String]);

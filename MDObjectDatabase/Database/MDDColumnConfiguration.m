@@ -22,7 +22,7 @@
 }
 
 - (NSString *)description{
-    return [[self dictionaryWithValuesForKeys:@[@"primary", @"nullabled", @"unique", @"checkValue", @"defaultValue", @"length", @"compositeKeyName"]] description];
+    return [[self dictionaryWithValuesForKeys:@[@"primary", @"nullabled", @"unique", @"checkValue", @"defaultValue", @"length", @"compositePropertyName"]] description];
 }
 
 @end

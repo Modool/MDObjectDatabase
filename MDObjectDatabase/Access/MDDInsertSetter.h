@@ -6,11 +6,11 @@
 //  Copyright © 2018年 markejave. All rights reserved.
 //
 
-#import "MDDKeyValueDescriptor.h"
+#import "MDDPropertyValueDescriptor.h"
 
 @protocol MDDObject;
 @class MDDDescription, MDDTableInfo;
-@interface MDDInsertSetter : MDDKeyValueDescriptor
+@interface MDDInsertSetter : MDDPropertyValueDescriptor
 
 @property (nonatomic, strong, readonly) MDDDescription *SQLDescription NS_UNAVAILABLE;
 

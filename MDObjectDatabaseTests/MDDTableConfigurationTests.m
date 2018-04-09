@@ -1,5 +1,5 @@
 //
-//  MDDConfigurationTests.m
+//  MDDTableConfigurationTests.m
 //  MDObjectDatabaseTests
 //
 //  Created by xulinfeng on 2018/3/27.
@@ -8,11 +8,11 @@
 
 #import <XCTest/XCTest.h>
 
-@interface MDDConfigurationTests : XCTestCase
+@interface MDDTableConfigurationTests : XCTestCase
 
 @end
 
-@implementation MDDConfigurationTests
+@implementation MDDTableConfigurationTests
 
 - (void)setUp {
     [super setUp];

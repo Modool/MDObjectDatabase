@@ -23,7 +23,7 @@
 
 @property (nonatomic, assign) NSUInteger length;
 
-@property (nonatomic, copy) NSString *compositeKeyName;
+@property (nonatomic, copy) NSString *compositePropertyName;
 
 + (instancetype)defaultConfigurationWithColumn:(MDDColumn *)column;
 

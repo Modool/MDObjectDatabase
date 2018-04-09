@@ -10,11 +10,11 @@
 
 @implementation MDDDescriptor
 
-+ (instancetype)descriptorWithTableInfo:(MDDTableInfo *)tableInfo;{
++ (instancetype)descriptorWithTableInfo:(id<MDDTableInfo>)tableInfo;{
     return [[self alloc] initWithTableInfo:tableInfo];
 }
 
-- (instancetype)initWithTableInfo:(MDDTableInfo *)tableInfo;{
+- (instancetype)initWithTableInfo:(id<MDDTableInfo>)tableInfo;{
     if (self = [super init]) {
         _tableInfo = tableInfo;
     }
@@ -25,7 +25,7 @@
     return [self initWithTableInfo:nil];
 }
 
-- (NSString *)descriptionWithTableInfo:(MDDTableInfo *)tableInfo value:(id *)value;{
+- (NSString *)descriptionWithTableInfo:(id<MDDTableInfo>)tableInfo value:(id *)value;{
     return nil;
 }
 

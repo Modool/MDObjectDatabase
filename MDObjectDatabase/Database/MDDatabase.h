@@ -8,19 +8,20 @@
 
 #import <Foundation/Foundation.h>
 
-@protocol MDDObject, MDDReferenceDatabaseQueue;
-@class MDDTableInfo, MDDConfiguration, MDDCompat;
+@protocol MDDTableInfo, MDDObject, MDDReferenceDatabaseQueue;
+@class MDDTableConfiguration, MDDCompat;
 @interface MDDatabase : NSObject
 
 + (instancetype)databaseWithDatabaseQueue:(id<MDDReferenceDatabaseQueue>)queue;
 - (instancetype)initWithDatabaseQueue:(id<MDDReferenceDatabaseQueue>)queue;
 
-- (MDDTableInfo *)requireTableInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;
-- (BOOL)existTableForClass:(Class<MDDObject>)class;
+- (id<MDDTableInfo>)requireInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;
+- (BOOL)existForClass:(Class<MDDObject>)class;
 
 - (BOOL)prepare;
 - (void)close;
 
-- (MDDCompat *)addConfiguration:(MDDConfiguration *)configuration error:(NSError **)error;
+- (MDDCompat *)addTableConfiguration:(MDDTableConfiguration *)configuration error:(NSError **)error;
+- (MDDCompat *)addViewConfiguration:(MDDTableConfiguration *)configuration error:(NSError **)error;
 
 @end

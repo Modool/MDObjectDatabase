@@ -30,7 +30,7 @@
 
 - (void)testAddConfiguration{
     
-//    _database addConfiguration:(MDDConfiguration *) error:(NSError *__autoreleasing *)
+//    _database addConfiguration:(MDDTableConfiguration *) error:(NSError *__autoreleasing *)
 }
 
 - (void)testPerformanceExample {

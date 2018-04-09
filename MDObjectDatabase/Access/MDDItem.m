@@ -12,34 +12,34 @@
 
 #import "MDDObject+Private.h"
 
-@interface MDDKey ()
+@interface MDDItem ()
 
 @property (nonatomic, copy) NSString *alias;
 
 @end
 
-@implementation MDDKey
+@implementation MDDItem
 
-+ (instancetype)keyWithDescriptor:(MDDDescriptor *)descriptor;{
++ (instancetype)itemWithDescriptor:(MDDDescriptor *)descriptor;{
     NSParameterAssert(descriptor);
-    return [self keyWithDescriptor:descriptor alias:nil];
+    return [self itemWithDescriptor:descriptor alias:nil];
 }
 
-+ (instancetype)keyWithDescriptor:(MDDDescriptor *)descriptor alias:(NSString *)alias;{
++ (instancetype)itemWithDescriptor:(MDDDescriptor *)descriptor alias:(NSString *)alias;{
     NSParameterAssert(descriptor);
-    MDDKey *key = [super descriptorWithTableInfo:[descriptor tableInfo]];
-    key->_descriptor = descriptor;
-    key->_alias = [alias copy];
+    MDDItem *property = [super descriptorWithTableInfo:[descriptor tableInfo]];
+    property->_descriptor = descriptor;
+    property->_alias = [alias copy];
     
-    return key;
+    return property;
 }
 
-+ (instancetype)keyWithTableInfo:(MDDTableInfo *)tableInfo keys:(NSSet<NSString *> *)keys;{
-    NSParameterAssert(tableInfo && [keys count]);
-    MDDKey *key = [super descriptorWithTableInfo:tableInfo];
-    key->_keys = [keys copy];
++ (instancetype)itemWithTableInfo:(MDDTableInfo *)tableInfo names:(NSSet<NSString *> *)names;{
+    NSParameterAssert(tableInfo && [names count]);
+    MDDItem *property = [super descriptorWithTableInfo:tableInfo];
+    property->_names = [names copy];
     
-    return key;
+    return property;
 }
 
 - (MDDDescription *)SQLDescription{
@@ -49,46 +49,49 @@
         if (_alias) SQL = [NSString stringWithFormat:@" ( %@ ) AS %@ ", SQL, self.alias];
         return [MDDDescription descriptionWithSQL:SQL values:[description values]];
     }
-    if ([_keys count] && [self tableInfo]) {
-        NSSet *primaryProperties = [[self tableInfo] primaryProperties];
+    if ([_names count] && [self tableInfo]) {
+        NSSet *primaryProperties = [[self tableInfo] respondsToSelector:@selector(primaryProperties)] ? [[self tableInfo] primaryProperties] : [NSSet set];
         NSDictionary *mapper = [[self tableInfo] propertyColumnMapper];
-        NSArray<NSString *> *keys = [[_keys allObjects] MDDItemMap:^id(id key) {
-            if (key != [NSNull null]) return key;
-            else return [primaryProperties anyObject];
+        NSArray<NSString *> *properties = [[_names allObjects] MDDItemMap:^id(id property) {
+            if (property != [NSNull null]) return property;
+            else {
+                NSParameterAssert([primaryProperties count]);
+                return [primaryProperties anyObject];
+            }
         }];
-        NSArray<NSString *> *columnNames = [mapper objectsForKeys:keys notFoundMarker:@""];
+        NSArray<NSString *> *columnNames = [mapper objectsForKeys:properties notFoundMarker:@""];
         return [MDDDescription descriptionWithSQL:[columnNames componentsJoinedByString:@", "]];
     }
     return nil;
 }
 
 - (NSString *)description{
-    return [[self dictionaryWithValuesForKeys:@[@"descriptor", @"alias", @"keys"]] description];
+    return [[self dictionaryWithValuesForKeys:@[@"descriptor", @"alias", @"property"]] description];
 }
 
 @end
 
-@implementation MDDFuntionKey
+@implementation MDDFuntionProperty
 
-+ (instancetype)keyWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)aKey function:(MDDFunction)function;{
-    return [self keyWithTableInfo:tableInfo key:aKey function:function  alias:nil];
++ (instancetype)itemWithTableInfo:(MDDTableInfo *)tableInfo name:(NSString *)name function:(MDDFunction)function;{
+    return [self itemWithTableInfo:tableInfo name:name function:function  alias:nil];
 }
 
-+ (instancetype)keyWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)aKey function:(MDDFunction)function alias:(NSString *)alias;{
-    MDDFuntionKey *key = [super keyWithTableInfo:tableInfo keys:[NSSet setWithObject:aKey]];
-    key.alias = [alias copy];
-    key->_function = function;
++ (instancetype)itemWithTableInfo:(MDDTableInfo *)tableInfo name:(NSString *)name function:(MDDFunction)function alias:(NSString *)alias;{
+    MDDFuntionProperty *property = [super itemWithTableInfo:tableInfo names:[NSSet setWithObject:name]];
+    property.alias = [alias copy];
+    property->_function = function;
     
-    return key;
+    return property;
 }
 
 - (MDDDescription *)SQLDescription{
-    if ([[self keys] count] && _function) {
-        NSSet *primaryProperties = [[self tableInfo] primaryProperties];
+    if ([[self names] count] && _function) {
+        NSSet *primaryProperties = [[self tableInfo] respondsToSelector:@selector(primaryProperties)] ? [[self tableInfo] primaryProperties] : [NSSet set];
         NSDictionary *mapper = [[self tableInfo] propertyColumnMapper];
-        NSString *key = [[self keys] anyObject] ?: [primaryProperties anyObject];
+        NSString *property = [[self names] anyObject] ?: [primaryProperties anyObject];
         
-        NSString *SQL = [NSString stringWithFormat:@" %@(%@) ", _function, mapper[key]];
+        NSString *SQL = [NSString stringWithFormat:@" %@(%@) ", _function, mapper[property]];
         if ([self alias]) SQL = [NSString stringWithFormat:@" %@ AS %@", SQL, self.alias];
         return [MDDDescription descriptionWithSQL:SQL];
     }
@@ -96,7 +99,7 @@
 }
 
 - (NSString *)description{
-    return [[self dictionaryWithValuesForKeys:@[@"descriptor", @"alias", @"keys", @"function"]] description];
+    return [[self dictionaryWithValuesForKeys:@[@"descriptor", @"alias", @"property", @"function"]] description];
 }
 
 @end
@@ -138,7 +141,7 @@
         return [MDDDescription descriptionWithSQL:SQL values:[description values]];
     }
     if ([self tableInfo]) {
-        return [MDDDescription descriptionWithSQL:[[self tableInfo] tableName]];
+        return [MDDDescription descriptionWithSQL:[[self tableInfo] name]];
     }
     return nil;
 }
@@ -149,11 +152,11 @@
 
 @end
 
-@implementation NSString (MDDKey)
+@implementation NSString (MDDItem)
 
 @end
 
-@implementation NSNull (MDDKey)
+@implementation NSNull (MDDItem)
 
 @end
 

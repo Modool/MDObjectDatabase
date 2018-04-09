@@ -23,22 +23,28 @@
 #import "MDDIndex+Private.h"
 #import "MDDColumn+Private.h"
 #import "MDDTableInfo+Private.h"
-#import "MDDConfiguration+Private.h"
+#import "MDDTableConfiguration+Private.h"
+#import "MDDViewConfiguration.h"
 #import "MDDReferenceDatabase.h"
+#import "MDDViewInfo.h"
+#import "MDDConditionSet.h"
+#import "MDDDescription.h"
 
 #import "MDDErrorCode.h"
 #import "MDDLogger.h"
 
 NSString * const MDDatabaseQueryTableExsitSQL = @"SELECT COUNT(name) FROM sqlite_master WHERE type = 'table' AND name = '%@'";
-NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
-
-NSString * const MDDatabaseCreateTableSQL = @"CREATE TABLE IF NOT EXISTS %@ ( %@ )";
-NSString * const MDDatabaseAlterTableSQL = @"ALTER TABLE %@ %@";
-
-NSString * const MDDatabaseAddColumnCommand = @"ADD COLUMN";
+NSString * const MDDatabaseQueryViewExsitSQL = @"SELECT COUNT(name) FROM sqlite_master WHERE type = 'view' AND name = '%@'";
 
 NSString * const MDDatabaseQueryTableInfoSQL = @"SELECT sql FROM sqlite_master WHERE type = 'table' AND tbl_name = '%@' AND sql NOT NULL";
 NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHERE type = 'index' AND tbl_name = '%@' AND sql NOT NULL";
+
+NSString * const MDDatabaseCreateTableSQL = @"CREATE TABLE IF NOT EXISTS %@ ( %@ )";
+NSString * const MDDatabaseCreateViewSQL = @"CREATE VIEW IF NOT EXISTS %@ AS %@";
+
+NSString * const MDDatabaseAlterTableSQL = @"ALTER TABLE %@ %@";
+NSString * const MDDatabaseAddColumnCommand = @"ADD COLUMN";
+NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
 
 @implementation MDDatabase
 
@@ -52,10 +58,10 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
     if (self = [super init]) {
         _databaseQueue = queue;
         
-        _tableInfos = [NSMutableDictionary<NSString *, MDDTableInfo *> dictionary];
-        _configurations = [NSMutableDictionary<NSString *, MDDConfiguration *> dictionary];
+        _infos = [NSMutableDictionary<NSString *, id<MDDTableInfo>> dictionary];
+        _configurations = [NSMutableDictionary<NSString *, id<MDDTableConfiguration>> dictionary];
         _compats = [NSMutableDictionary<NSString *, MDDCompat *> dictionary];
-        _tableClasses = [NSMutableDictionary<NSString *, Class> dictionary];
+        _classes = [NSMutableDictionary<NSString *, Class> dictionary];
         _lock = [[NSRecursiveLock alloc] init];
     }
     return self;
@@ -71,38 +77,52 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
 
 #pragma mark - public
 
-- (MDDCompat *)addConfiguration:(MDDConfiguration *)configuration error:(NSError **)error;{
-    if ([[self configurations] objectForKey:[configuration tableName]]) {
-        if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeConfigurationExisted userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Exist configuration of table: %@", [configuration tableName]]}];
+- (MDDCompat *)addTableConfiguration:(MDDTableConfiguration *)configuration error:(NSError **)error;{
+    if ([[self configurations] objectForKey:[configuration name]]) {
+        if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeConfigurationExisted userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Exist configuration of table: %@", [configuration name]]}];
         return nil;
     }
-    self.configurations[[configuration tableName]] = configuration;
-    self.tableClasses[[configuration tableName]] = [configuration objectClass];
+    self.configurations[[configuration name]] = configuration;
+    self.classes[[configuration name]] = [configuration objectClass];
     
     MDDCompat *compat = [MDDCompat compat];
-    self.compats[[configuration tableName]] = compat;
+    self.compats[[configuration name]] = compat;
     
     return compat;
 }
 
-- (MDDTableInfo *)requireTableInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;{
+- (MDDCompat *)addViewConfiguration:(MDDViewConfiguration *)configuration error:(NSError **)error;{
+    if ([[self configurations] objectForKey:[configuration name]]) {
+        if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeConfigurationExisted userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Exist configuration of view: %@", [configuration name]]}];
+        return nil;
+    }
+    self.configurations[[configuration name]] = configuration;
+    self.classes[[configuration name]] = [configuration objectClass];
+    
+    MDDCompat *compat = [MDDCompat compat];
+    self.compats[[configuration name]] = compat;
+    
+    return compat;
+}
+
+- (id<MDDTableInfo>)requireInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;{
     if (self.inTransaction) {
-        return [self _requireTableInfoWithClass:class error:error];
+        return [self _requireInfoWithClass:class error:error];
     }
     
     [[self lock] lock];
-    MDDTableInfo *info = [self _requireTableInfoWithClass:class error:error];
+    id<MDDTableInfo> info = [self _requireInfoWithClass:class error:error];
     [[self lock] unlock];
     
     return info;
 }
 
-- (BOOL)existTableForClass:(Class<MDDObject>)class;{
-    NSString *tableName = [self _tableNameFromClass:class];
+- (BOOL)existForClass:(Class<MDDObject>)class;{
+    NSString *tableName = [self _nameFromClass:class];
     if (![tableName length]) return NO;
     
     [[self lock] lock];
-    BOOL contained = [self _existTableNamed:tableName];
+    BOOL contained = [self _existInfoNamed:tableName];
     [[self lock] unlock];
     
     return contained;
@@ -126,28 +146,28 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
 
 #pragma mark - private
 
-- (NSString *)_tableNameFromClass:(Class<MDDObject>)class{
+- (NSString *)_nameFromClass:(Class<MDDObject>)class{
     if (![class conformsToProtocol:@protocol(MDDObject)]) return nil;
     
-    return [[[self tableClasses] allKeysForObject:class] firstObject];
+    return [[[self classes] allKeysForObject:class] firstObject];
 }
 
-- (MDDTableInfo *)_requireTableInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;{
-    NSString *tableName = [self _tableNameFromClass:class];
+- (id<MDDTableInfo>)_requireInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;{
+    NSString *tableName = [self _nameFromClass:class];
     NSParameterAssert(tableName);
     
-    MDDTableInfo *tableInfo = [self tableInfos][tableName];
+    id<MDDTableInfo> tableInfo = [self infos][tableName];
     if (!tableInfo) {
         BOOL success = [self _initialTableWithClass:class error:error];
         if (success) {
-            tableInfo = [self tableInfos][tableName];
+            tableInfo = [self infos][tableName];
         }
     }
     return tableInfo;
 }
 
-- (BOOL)_existTableNamed:(NSString *)tableName;{
-    return [[[self tableInfos] allKeys] containsObject:tableName];;
+- (BOOL)_existInfoNamed:(NSString *)name;{
+    return [[[self infos] allKeys] containsObject:name];;
 }
 
 - (BOOL)_initialTableWithClass:(Class<MDDObject>)class error:(NSError **)error;{
@@ -156,46 +176,50 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
         return NO;
     }
     
-    NSString *tableName = [self _tableNameFromClass:class];
-    if (![tableName length]) {
+    NSString *name = [self _nameFromClass:class];
+    if (![name length]) {
         if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeTableNonexistent userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Table is non-exsit for class: %@", class]}];
         return NO;
     }
     
-    if ([self _existTableNamed:tableName]) return YES;
+    if ([self _existInfoNamed:name]) return YES;
     
-    MDDConfiguration *configuration = self.configurations[tableName];
-    MDDTableInfo *info = [MDDTableInfo infoWithConfiguration:configuration error:error];
-    if (!info) return NO;
+    id<MDDTableConfiguration> configuration = self.configurations[name];
+    BOOL isTable = [configuration isKindOfClass:[MDDTableConfiguration class]];
     
-    MDDCompat *compat = self.compats[tableName];
-    BOOL exsit = [self _exsitDatabaseTable:tableName];
+    Class infoClass = isTable ? [MDDTableInfo class] : [MDDViewInfo class];
+    id<MDDTableInfoPrivate> info = [infoClass infoWithConfiguration:(id)configuration error:error];
+    
+    MDDCompat *compat = self.compats[name];
+    BOOL exsit = [self _exsitDatabaseInfoNamed:name isTable:isTable];
     if (!exsit) {
-        BOOL success = [self _createTableWithInfo:info configuration:configuration];
+        BOOL success = [self _createWithInfo:info configuration:configuration];
         if (!success) {
-            if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeTableCreateFailed userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to create table %@ of class %@", tableName, class]}];
+            if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeTableCreateFailed userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to create table %@ of class %@", name, class]}];
             return NO;
         }
-    } else {
+    } else if (isTable) {
         BOOL success = [self _compatColumnsWithInfo:info configuration:configuration compat:compat];
         if (!success) {
-            if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeTableCompatFailed userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to compat table %@ of class %@", tableName, class]}];
+            if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:MDDErrorCodeTableCompatFailed userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to compat table %@ of class %@", name, class]}];
             return NO;
         }
     }
-    BOOL success = [self _compatIndexesWithInfo:info configuration:configuration compat:compat];
-    if (!success) {
-        if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to verify indexes for table %@ of class %@", tableName, class]}];
-        
-        return NO;
+    if (isTable) {
+        BOOL success = [self _compatIndexesWithInfo:(id)info configuration:configuration compat:compat];
+        if (!success) {
+            if (error) *error = [NSError errorWithDomain:MDDatabaseErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to verify indexes for table %@ of class %@", name, class]}];
+            
+            return NO;
+        }
     }
-    self.tableInfos[tableName] = info;
+    self.infos[name] = info;
     return YES;
 }
 
-- (BOOL)_exsitDatabaseTable:(NSString *)tableName{
+- (BOOL)_exsitDatabaseInfoNamed:(NSString *)name isTable:(BOOL)isTable{
     __block BOOL exsit = NO;
-    NSString *SQL = [NSString stringWithFormat:MDDatabaseQueryTableExsitSQL, tableName];
+    NSString *SQL = [NSString stringWithFormat:isTable ? MDDatabaseQueryTableExsitSQL : MDDatabaseQueryViewExsitSQL, name];
     [[self databaseQueue] inDatabase:^(id<MDDReferenceDatabase> database) {
         id<MDDReferenceDatabaseResultSet> set = [database executeQuery:SQL];
         if ([set next]) {
@@ -206,13 +230,13 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
     return exsit;
 }
 
-- (NSString *)SQLForCreatingTableWithInfo:(MDDTableInfo *)info configuration:(MDDConfiguration *)configuration{
-    NSArray<NSString *> *columnDescriptions = [self descriptionsWithInfo:info configurations:[configuration columnConfigurations] command:nil];
-    return [NSString stringWithFormat:MDDatabaseCreateTableSQL, [info tableName], [columnDescriptions componentsJoinedByString:@","]];
-}
-
-- (BOOL)_createTableWithInfo:(MDDTableInfo *)info configuration:(MDDConfiguration *)configuration{
-    NSString *SQL = [self SQLForCreatingTableWithInfo:info configuration:configuration];
+- (BOOL)_createWithInfo:(id<MDDTableInfo>)info configuration:(id<MDDTableConfiguration>)configuration{
+    NSString *SQL = nil;
+    if ([info isKindOfClass:[MDDTableInfo class]]) {
+        SQL = [self SQLForCreatingTableWithInfo:(id)info configuration:(id)configuration];
+    } else {
+        SQL = [self SQLForCreatingViewWithInfo:(id)info configuration:(id)configuration];
+    }
     
     __block BOOL success = NO;
     [[self databaseQueue] inDatabase:^(id<MDDReferenceDatabase> database) {
@@ -221,7 +245,40 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
     return success;
 }
 
-- (BOOL)_compatColumnsWithInfo:(MDDTableInfo *)info configuration:(MDDConfiguration *)configuration compat:(MDDCompat *)compat{
+- (NSString *)SQLForCreatingTableWithInfo:(MDDTableInfo *)info configuration:(MDDTableConfiguration *)configuration{
+    NSArray<NSString *> *columnDescriptions = [self descriptionsWithInfo:info configurations:[configuration columnConfigurations] command:nil];
+    return [NSString stringWithFormat:MDDatabaseCreateTableSQL, [info name], [columnDescriptions componentsJoinedByString:@","]];
+}
+
+- (NSString *)SQLForCreatingViewWithInfo:(MDDViewInfo *)info configuration:(MDDViewConfiguration *)configuration{
+    NSMutableSet<NSString *> *columnNames = [NSMutableSet set];
+    NSMutableSet<NSString *> *tableNames = [NSMutableSet set];
+    
+    NSDictionary<NSString *, NSString *> *propertyMapper = [configuration propertyMapper];
+    NSDictionary<NSString *, MDDColumn *> *propertyColumns = [configuration propertyColumns];
+    
+    for (NSString *propertyName in propertyColumns) {
+        MDDColumn *column = propertyColumns[propertyName];
+        NSString *origin = [column name];
+        NSString *alisa = propertyMapper[propertyName];
+        if ([origin isEqualToString:alisa]) {
+            [columnNames addObject:origin];
+        } else {
+            [columnNames addObject:[NSString stringWithFormat:@" %@ AS %@ ", origin, alisa]];
+        }
+        [tableNames addObject:[[column tableInfo] name]];
+    }
+    
+    NSString *querySQL = [NSString stringWithFormat:@"SELECT %@ FROM %@", [[columnNames allObjects] componentsJoinedByString:@","], [[tableNames allObjects] componentsJoinedByString:@","]];
+    if ([configuration conditionSet]) {
+        MDDDescription *description = [[configuration conditionSet] SQLDescription];
+        querySQL = [querySQL stringByAppendingFormat:@" WHERE %@ ", [description normalizedSQL]];
+    }
+    
+    return [NSString stringWithFormat:MDDatabaseCreateViewSQL, info.name, querySQL];
+}
+
+- (BOOL)_compatColumnsWithInfo:(id<MDDTableInfoPrivate>)info configuration:(MDDTableConfiguration *)configuration compat:(MDDCompat *)compat{
     NSDictionary<NSString *, MDDColumn *> *columns = [info columnMapper];
     NSDictionary<NSString *, MDDLocalColumn *> *localColumns = [self localColumnsWithInfo:info];
     
@@ -248,7 +305,7 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
     return YES;
 }
 
-- (BOOL)_appendColumns:(NSSet<MDDColumn *> *)columns info:(MDDTableInfo *)info configurations:(NSDictionary<NSString *, MDDColumnConfiguration *> *)configurations{
+- (BOOL)_appendColumns:(NSSet<MDDColumn *> *)columns info:(id<MDDTableInfo>)info configurations:(NSDictionary<NSString *, MDDColumnConfiguration *> *)configurations{
     __block BOOL success = NO;
     [self executeInTransaction:^(id<MDDReferenceDatabase> db, BOOL *rollback) {
         for (MDDColumn *column in columns) {
@@ -256,7 +313,7 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
             NSString *description = [self columnDescriptionWithColumn:column configuration:configuration union:NO];
             description = [NSString stringWithFormat:@" %@ %@ ", MDDatabaseAddColumnCommand, description ?: @""];
             
-            NSString *SQL = [NSString stringWithFormat:MDDatabaseAlterTableSQL, info.tableName, description];
+            NSString *SQL = [NSString stringWithFormat:MDDatabaseAlterTableSQL, [info name], description];
             BOOL state = [db executeUpdate:SQL];
             
             *rollback = !state;
@@ -268,7 +325,7 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
 }
 
 - (NSArray<NSString *> *)columnNamesInDatabaseWithInfo:(MDDTableInfo *)info{
-    NSString *SQL = [NSString stringWithFormat:MDDatabaseQueryRowSQL, [info tableName]];
+    NSString *SQL = [NSString stringWithFormat:MDDatabaseQueryRowSQL, [info name]];
     
     NSMutableArray<NSString *> *columnNames = [NSMutableArray array];
     [[self databaseQueue] inDatabase:^(id<MDDReferenceDatabase> database) {
@@ -285,8 +342,8 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
     return columnNames;
 }
 
-- (NSDictionary<NSString *, MDDLocalColumn *> *)localColumnsWithInfo:(MDDTableInfo *)info{
-    NSString *SQL = [NSString stringWithFormat:MDDatabaseQueryTableInfoSQL, [info tableName]];
+- (NSDictionary<NSString *, MDDLocalColumn *> *)localColumnsWithInfo:(id<MDDTableInfo>)info{
+    NSString *SQL = [NSString stringWithFormat:MDDatabaseQueryTableInfoSQL, [info name]];
     
     __block NSDictionary<NSString *, MDDLocalColumn *> *columns = nil;
     [[self databaseQueue] inDatabase:^(id<MDDReferenceDatabase> database) {
@@ -302,14 +359,14 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
 - (NSArray<NSString *> *)descriptionsWithInfo:(MDDTableInfo *)info configurations:(NSDictionary<NSString *, MDDColumnConfiguration *> *)configurations command:(NSString *)command{
     NSMutableArray<NSString *> *descriptions = [NSMutableArray<NSString *> array];
     BOOL union_ = [[info primaryProperties] count] > 1;
-    NSString *compositeKeyName = nil;
+    NSString *compositePropertyName = nil;
     
     for (MDDColumn *column in info.columns) {
         MDDColumnConfiguration *configuration = configurations[[column propertyName]];
-        if (compositeKeyName && [configuration compositeKeyName] && [compositeKeyName isEqualToString:compositeKeyName]) {
-            MDDLog(MDDLoggerLevelError, @"Can't define multiple compoiste key names %@.", compositeKeyName, [configuration compositeKeyName]); return nil;
-        } else if ([configuration compositeKeyName]){
-            compositeKeyName = [configuration compositeKeyName];
+        if (compositePropertyName && [configuration compositePropertyName] && [compositePropertyName isEqualToString:compositePropertyName]) {
+            MDDLog(MDDLoggerLevelError, @"Can't define multiple compoiste property names %@.", compositePropertyName, [configuration compositePropertyName]); return nil;
+        } else if ([configuration compositePropertyName]){
+            compositePropertyName = [configuration compositePropertyName];
         }
             
         NSString *description = [self columnDescriptionWithColumn:column configuration:configuration union:union_];
@@ -318,7 +375,7 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
     }
     if (!union_) return [descriptions copy];
     
-    NSString *constraint = compositeKeyName ? [NSString stringWithFormat:@" CONSTRAINT %@", compositeKeyName] : @"";
+    NSString *constraint = compositePropertyName ? [NSString stringWithFormat:@" CONSTRAINT %@", compositePropertyName] : @"";
     NSArray<NSString *> *columnNames = [[info propertyColumnMapper] objectsForKeys:[[info primaryProperties] allObjects] notFoundMarker:@""];
     
     [descriptions addObject:[NSString stringWithFormat:@" %@ PRIMARY KEY( %@ ) ", constraint, [columnNames componentsJoinedByString:@","]]];
@@ -367,7 +424,7 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
     return [MDDColumnConfiguration defaultConfigurationWithColumn:column];
 }
 
-- (BOOL)_compatIndexesWithInfo:(MDDTableInfo *)info configuration:(MDDConfiguration *)configuration compat:(MDDCompat *)compat {
+- (BOOL)_compatIndexesWithInfo:(MDDTableInfo *)info configuration:(MDDTableConfiguration *)configuration compat:(MDDCompat *)compat {
     NSArray<NSString *> *indexNames =  [info indexNames];
     NSArray<MDDIndex *> *indexes =  [info indexes];
     
@@ -450,12 +507,12 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
 - (NSArray<MDDLocalIndex *> *)_localIndexNamesWithInfo:(MDDTableInfo *)info{
     NSMutableArray *indexes = [NSMutableArray array];
     [[self databaseQueue] inDatabase:^(id<MDDReferenceDatabase> database) {
-        id<MDDReferenceDatabaseResultSet> set = [database executeQuery:[NSString stringWithFormat:MDDatabaseQueryIndexNameSQL, info.tableName]];
+        id<MDDReferenceDatabaseResultSet> set = [database executeQuery:[NSString stringWithFormat:MDDatabaseQueryIndexNameSQL, [info name]]];
         while ([set next]) {
             NSString *name = [set objectForColumnIndex:[set columnIndexForName:@"name"]];
             NSString *SQL = [set objectForColumnIndex:[set columnIndexForName:@"sql"]];
             
-            [indexes addObject:[MDDLocalIndex indexWithName:name tableName:[info tableName] SQL:SQL]];
+            [indexes addObject:[MDDLocalIndex indexWithName:name tableName:[info name] SQL:SQL]];
         }
         [set close];
     }];
@@ -464,7 +521,7 @@ NSString * const MDDatabaseQueryIndexNameSQL = @"SELECT * FROM sqlite_master WHE
 
 - (BOOL)_prepare{
     NSError *error = nil;
-    for (Class<MDDObject> class in [[self tableClasses] allValues]) {
+    for (Class<MDDObject> class in [[self classes] allValues]) {
         BOOL state = [self _initialTableWithClass:class error:&error];
         if (!state) return NO;
     }

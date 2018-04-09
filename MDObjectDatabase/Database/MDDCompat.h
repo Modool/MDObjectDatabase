@@ -20,7 +20,7 @@ typedef NS_ENUM(NSUInteger, MDDCompatResult) {
     MDDCompatResultContinue,
 };
 
-@class MDDLocalColumn, MDDColumn, MDDLocalIndex, MDDIndex;
+@class MDDLocalColumn, MDDColumn, MDDLocalIndex, MDDIndex, MDDLocalView, MDDViewInfo;
 @interface MDDCompat : NSObject
 
 + (instancetype)compat;
@@ -28,5 +28,7 @@ typedef NS_ENUM(NSUInteger, MDDCompatResult) {
 - (void)bindColumnIncrement:(MDDCompatResult (^)(MDDCompatOperation operation, MDDLocalColumn *localColumn, MDDColumn *column))increment;
 
 - (void)bindIndexIncrement:(MDDCompatResult (^)(MDDCompatOperation operation, MDDLocalIndex *localIndex, MDDIndex *index))increment;
+
+- (void)bindViewIncrement:(MDDCompatResult (^)(MDDCompatOperation operation, MDDLocalView *localView, MDDViewInfo *view))increment;
 
 @end

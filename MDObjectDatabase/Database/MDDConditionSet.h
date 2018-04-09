@@ -22,7 +22,7 @@
 
 @property (nonatomic, copy, readonly) NSArray<MDDCondition *> *conditions;
 
-- (NSArray<MDDItem> *)allKeysIgnoreMultipleTable:(BOOL)ignore;
+- (NSArray<MDDItem> *)allPropertysIgnoreMultipleTable:(BOOL)ignore;
 
 + (instancetype)setWithCondition:(MDDCondition *)condition;
 + (instancetype)setWithConditions:(NSArray<MDDCondition *> *)conditions;

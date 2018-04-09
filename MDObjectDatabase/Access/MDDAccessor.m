@@ -33,7 +33,7 @@
         dispatch_queue_set_specific(queue, _queueTag, _queueTag, NULL);
         
         NSError *error = nil;
-        _tableInfo = [database requireTableInfoWithClass:class error:&error];
+        _tableInfo = [database requireInfoWithClass:class error:&error];
         NSAssert(_tableInfo && !error, [error description]);
     }
     return self;

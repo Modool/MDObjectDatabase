@@ -8,7 +8,7 @@
 //
 
 #import "MDDSetter.h"
-#import "MDDKeyValueDescriptor.h"
+#import "MDDPropertyValueDescriptor.h"
 #import "MDDColumn.h"
 #import "MDDObject.h"
 #import "MDDTableInfo.h"
@@ -17,15 +17,15 @@
 
 @implementation MDDSetter
 
-+ (instancetype)setterWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key value:(id<NSObject, NSCopying>)value;{
-    return [self setterWithTableInfo:tableInfo key:key value:value transform:nil operation:MDDOperationEqual];
++ (instancetype)setterWithTableInfo:(id<MDDTableInfo>)tableInfo property:(NSString *)property value:(id<MDDItem>)value;{
+    return [self setterWithTableInfo:tableInfo property:property value:value transform:nil operation:MDDOperationEqual];
 }
 
-+ (instancetype)setterWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key value:(id<NSObject, NSCopying>)value operation:(MDDOperation)operation;{
-    return [self setterWithTableInfo:tableInfo key:key value:value transform:nil operation:operation];
++ (instancetype)setterWithTableInfo:(id<MDDTableInfo>)tableInfo property:(NSString *)property value:(id<MDDItem>)value operation:(MDDOperation)operation;{
+    return [self setterWithTableInfo:tableInfo property:property value:value transform:nil operation:operation];
 }
 
-+ (instancetype)setterWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key value:(id<NSObject, NSCopying>)value transform:(NSString *)transform operation:(MDDOperation)operation;{
++ (instancetype)setterWithTableInfo:(id<MDDTableInfo>)tableInfo property:(NSString *)property value:(id<MDDItem>)value transform:(NSString *)transform operation:(MDDOperation)operation;{
     NSParameterAssert(operation != MDDOperationGreaterThan);
     NSParameterAssert(operation != MDDOperationGreaterThanOrEqual);
     NSParameterAssert(operation != MDDOperationLessThan);
@@ -33,7 +33,7 @@
     
     NSParameterAssert(operation != MDDOperationLike);
     NSParameterAssert(operation != MDDOperationIn);
-    MDDSetter *setter = [super descriptorWithTableInfo:tableInfo key:key value:value];
+    MDDSetter *setter = [super descriptorWithTableInfo:tableInfo property:property value:value];
     setter->_transform = transform;
     setter->_operation = operation;
     
@@ -41,10 +41,10 @@
 }
 
 - (MDDDescription *)SQLDescription{
-    id key = [self key];
+    id property = [self property];
     id value = [self value];
     
-    MDDColumn *column = [[self tableInfo] columnForKey:key];
+    MDDColumn *column = [[self tableInfo] columnForProperty:property];
     NSParameterAssert(column);
     
     NSString *replacement = nil;
@@ -89,11 +89,11 @@
     }
 }
 
-+ (NSArray<MDDSetter *> *)settersWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;{
++ (NSArray<MDDSetter *> *)settersWithObject:(id)object tableInfo:(id<MDDTableInfo>)tableInfo;{
     return [self settersWithObject:object properties:nil ignoredProperties:nil tableInfo:tableInfo];
 }
 
-+ (NSArray<MDDSetter *> *)settersWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties tableInfo:(MDDTableInfo *)tableInfo;{
++ (NSArray<MDDSetter *> *)settersWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties tableInfo:(id<MDDTableInfo>)tableInfo;{
     NSParameterAssert(object && tableInfo);
     
     NSMutableArray<MDDSetter *> *setters = [NSMutableArray<MDDSetter *> array];
@@ -101,7 +101,7 @@
         if (ignoredProperties && [ignoredProperties count] && [ignoredProperties containsObject:[column propertyName]]) continue;
         else if (properties && [properties count] && ![properties containsObject:[column propertyName]])  continue;
         
-        MDDSetter *setter = [self setterWithTableInfo:tableInfo key:[column propertyName] value:[object valueForKey:[column  propertyName]]];
+        MDDSetter *setter = [self setterWithTableInfo:tableInfo property:[column propertyName] value:[object valueForKey:[column  propertyName]]];
         if (!setter) continue;
         
         [setters addObject:setter];
@@ -115,7 +115,7 @@
 }
 
 - (NSString *)description{
-    return [[self dictionaryWithValuesForKeys:@[@"key", @"value", @"operation", @"transform"]] description];
+    return [[self dictionaryWithValuesForKeys:@[@"property", @"value", @"operation", @"transform"]] description];
 }
 
 @end

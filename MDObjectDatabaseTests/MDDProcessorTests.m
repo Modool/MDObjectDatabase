@@ -25,11 +25,12 @@
 }
 
 - (void)testInsertObject {
-    MDDTestClass *object = [[MDDTestClass alloc] init];
-    
     __block BOOL state = NO;
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
-        state = [processor insertWithObject:object];
+        state = [processor insertWithObjectsWithBlock:^id(NSUInteger index, BOOL *stop) {
+            *stop = index == 1;
+            return [[MDDTestClass alloc] init];
+        } block:nil];
         XCTAssert([NSThread isMainThread]);
     }];
     XCTAssert(state);
@@ -46,7 +47,7 @@
 - (void)testQueryByCondition {
     __block NSArray<MDDTestClass *> *objects = nil;
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
-        objects = [processor queryWithConditionSet:[MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:processor.tableInfo key:@MDDKeyPath(MDDTestClass, objectID) value:@"10" operation:MDDOperationLessThan]]];
+        objects = [processor queryWithConditionSet:[MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:processor.tableInfo property:@MDDKeyPath(MDDTestClass, objectID) value:@"10" operation:MDDOperationLessThan]]];
     }];
     XCTAssert(objects.count);
 }
@@ -54,7 +55,7 @@
 - (void)testQueryByConditionTransform {
     __block NSArray<MDDTestClass *> *objects = nil;
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
-        objects = [processor queryWithConditionSet:[MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:processor.tableInfo key:@MDDKeyPath(MDDTestClass, objectID) value:@"20" operation:MDDOperationLessThan transform:@"+ 10"]]];
+        objects = [processor queryWithConditionSet:[MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:processor.tableInfo property:@MDDKeyPath(MDDTestClass, objectID) value:@"20" operation:MDDOperationLessThan transform:@"+ 10"]]];
     }];
     XCTAssert(objects.count);
 }
@@ -62,7 +63,7 @@
 - (void)testQueryByConditionMultipleTransforms {
     __block NSArray<MDDTestClass *> *objects = nil;
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
-        objects = [processor queryWithConditionSet:[MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:processor.tableInfo key:@MDDKeyPath(MDDTestClass, objectID) value:@"20" operation:MDDOperationLessThan transforms:@[@"+ 10", @"* 0.7"]]]];
+        objects = [processor queryWithConditionSet:[MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:processor.tableInfo property:@MDDKeyPath(MDDTestClass, objectID) value:@"20" operation:MDDOperationLessThan transforms:@[@"+ 10", @"* 0.7"]]]];
     }];
     XCTAssert(objects.count);
 }
@@ -71,14 +72,14 @@
     NSMutableArray<MDDTestClass *> *objects = [NSMutableArray array];
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
         MDDConditionSet *condition1 = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:[processor tableInfo] primaryValue:@"10" operation:MDDOperationGreaterThan]];
-        MDDSort *sort1 = [MDDSort sortWithTableInfo:[processor tableInfo] key:@MDDKeyPath(MDDTestClass, objectID) ascending:YES];
-        MDDQuery *subQuery = [MDDQuery queryWithKeys:nil conditionSet:condition1 sorts:@[sort1]];
+        MDDSort *sort1 = [MDDSort sortWithTableInfo:[processor tableInfo] property:@MDDKeyPath(MDDTestClass, objectID) ascending:YES];
+        MDDQuery *subQuery = [MDDQuery queryWithPropertys:nil conditionSet:condition1 sorts:@[sort1]];
         
         MDDConditionSet *condition2 = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:[processor tableInfo] primaryValue:@"20" operation:MDDOperationLessThan]];
-        MDDSort *sort2 = [MDDSort sortWithTableInfo:[processor tableInfo] key:@MDDKeyPath(MDDTestClass, objectID) ascending:NO];
+        MDDSort *sort2 = [MDDSort sortWithTableInfo:[processor tableInfo] property:@MDDKeyPath(MDDTestClass, objectID) ascending:NO];
                                       
         MDDSet *set = [MDDSet setWithDescriptor:subQuery alias:@"sub_query"];
-        MDDQuery *query = [MDDQuery queryWithKeys:nil set:set conditionSet:condition2 sorts:@[sort2] range:NSRangeZore objectClass:[MDDTestClass class]];
+        MDDQuery *query = [MDDQuery queryWithPropertys:nil set:set conditionSet:condition2 sorts:@[sort2] range:NSRangeZore objectClass:[MDDTestClass class]];
         
         [processor executeQuery:query block:^(id result) {
             [objects addObject:result];
@@ -92,11 +93,11 @@
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
         MDDConditionSet *condition1 = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:[processor tableInfo] primaryValue:@"10" operation:MDDOperationGreaterThan]];
         MDDQuery *subQuery = [MDDQuery queryWithConditionSet:condition1];
-        MDDKey *key = [MDDKey keyWithDescriptor:subQuery];
+        MDDItem *property = [MDDItem itemWithDescriptor:subQuery];
         
-        MDDConditionSet *condition2 = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:[processor tableInfo] key:key value:nil operation:MDDOperationExists]];
-        MDDSort *sort2 = [MDDSort sortWithTableInfo:[processor tableInfo] key:@MDDKeyPath(MDDTestClass, objectID) ascending:NO];
-        MDDQuery *query = [MDDQuery queryWithKeys:nil conditionSet:condition2 sorts:@[sort2] range:NSRangeZore objectClass:[MDDTestClass class]];
+        MDDConditionSet *condition2 = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:[processor tableInfo] property:property value:nil operation:MDDOperationExists]];
+        MDDSort *sort2 = [MDDSort sortWithTableInfo:[processor tableInfo] property:@MDDKeyPath(MDDTestClass, objectID) ascending:NO];
+        MDDQuery *query = [MDDQuery queryWithPropertys:nil conditionSet:condition2 sorts:@[sort2] range:NSRangeZore objectClass:[MDDTestClass class]];
         
         [processor executeQuery:query block:^(id result) {
             [objects addObject:result];
@@ -105,15 +106,15 @@
     XCTAssert([objects count]);
 }
 
-- (void)testQueryByUnionTableAsKey {
+- (void)testQueryByUnionTableAsProperty {
     NSMutableArray<MDDTestClass *> *objects = [NSMutableArray array];
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
-        MDDFunctionQuery *keyQuery = [MDDFunctionQuery fuctionQueryWithKey:[MDDFuntionKey keyWithTableInfo:[processor tableInfo] key:@MDDKeyPath(MDDTestClass, objectID) function:MDDFunctionSUM] alias:@"integer_value"];
-        MDDKey *key = [MDDKey keyWithDescriptor:keyQuery];
+        MDDFunctionQuery *keyQuery = [MDDFunctionQuery fuctionQueryWithProperty:[MDDFuntionProperty itemWithTableInfo:[processor tableInfo] name:@MDDKeyPath(MDDTestClass, objectID) function:MDDFunctionSUM] alias:@"integer_value"];
+        MDDItem *property = [MDDItem itemWithDescriptor:keyQuery];
     
         MDDConditionSet *condition1 = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:[processor tableInfo] primaryValue:@"10" operation:MDDOperationGreaterThan]];
-        MDDKey *key2 = [MDDKey keyWithTableInfo:[processor tableInfo] keys:NSSetObjects([NSNull null], @MDDKeyPath(MDDTestClass, text), @MDDKeyPath(MDDTestClass, floatValue))];
-        MDDQuery *query = [MDDQuery queryWithKeys:NSSetObjects(key, key2) conditionSet:condition1 sorts:nil range:NSRangeZore objectClass:[MDDTestClass class]];
+        MDDItem *key2 = [MDDItem itemWithTableInfo:[processor tableInfo] names:NSSetObjects([NSNull null], @MDDKeyPath(MDDTestClass, text), @MDDKeyPath(MDDTestClass, floatValue))];
+        MDDQuery *query = [MDDQuery queryWithPropertys:NSSetObjects(property, key2) conditionSet:condition1 sorts:nil range:NSRangeZore objectClass:[MDDTestClass class]];
         
         [processor executeQuery:query block:^(id result) {
             [objects addObject:result];
@@ -125,7 +126,7 @@
 - (void)testUpdateAllRow {
     NSUInteger value = arc4random() % 10;
     
-    MDDSetter *setter = [MDDSetter setterWithTableInfo:[[self accessor] tableInfo] key:@MDDKeyPath(MDDTestClass, integerValue) value:@(value)];
+    MDDSetter *setter = [MDDSetter setterWithTableInfo:[[self accessor] tableInfo] property:@MDDKeyPath(MDDTestClass, integerValue) value:@(value)];
     __block BOOL state = NO;
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
         state = [processor updateWithSetter:setter];
@@ -134,7 +135,7 @@
     
     __block MDDTestClass *object = nil;
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
-        object = [[processor queryWithKey:@MDDKeyPath(MDDTestClass, integerValue) value:@(value)] firstObject];
+        object = [[processor queryWithProperty:@MDDKeyPath(MDDTestClass, integerValue) value:@(value)] firstObject];
     }];
     XCTAssert(object);
     XCTAssert(object.integerValue == value);
@@ -143,7 +144,7 @@
 - (void)testUpdate {
     __block BOOL state = NO;
     [[self accessor] sync:^(id<MDDProcessor, MDDCoreProcessor> processor) {
-        state = [processor updateWithPrimaryValue:@"1" key:@MDDKeyPath(MDDTestClass, text) value:@"hhhh"];
+        state = [processor updateWithPrimaryValue:@"1" property:@MDDKeyPath(MDDTestClass, text) value:@"hhhh"];
     }];
     XCTAssert(state);
     

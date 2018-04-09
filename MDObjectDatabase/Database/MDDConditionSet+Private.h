@@ -18,6 +18,6 @@
 
 @property (nonatomic, strong) NSMutableSet<MDDCondition *> *mutableConditions;
 
-@property (nonatomic, strong) NSMutableSet<MDDTableInfo *> *mutableTableInfos;
+@property (nonatomic, strong) NSMutableSet<MDDTableInfo> *mutableTableInfos;
 
 @end

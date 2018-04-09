@@ -16,6 +16,8 @@
 #import "MDDItem.h"
 #import "MDDTableInfo.h"
 
+#import "MDDMacros.h"
+
 @implementation MDDConditionSet
 
 + (instancetype)setWithCondition:(MDDCondition *)condition;{
@@ -58,7 +60,7 @@
     }
     if (conditions && [conditions count]) {
         [[set mutableConditions] addObjectsFromArray:conditions.copy];
-        [[set mutableTableInfos] addObjectsFromArray:[conditions valueForKey:@"tableInfo"]];
+        [[set mutableTableInfos] addObjectsFromArray:[conditions valueForKey:@MDDKeyPath(MDDCondition, tableInfo)]];
     }
     return set;
 }
@@ -68,7 +70,7 @@
         self.operation = MDDConditionOperationAnd;
         self.mutableSets = [NSMutableSet set];
         self.mutableConditions = [NSMutableSet set];
-        self.mutableTableInfos = [NSMutableSet set];
+        self.mutableTableInfos = [NSMutableSet<MDDTableInfo> set];
     }
     return self;
 }
@@ -101,25 +103,25 @@
     return [[self mutableConditions] allObjects];
 }
 
-- (NSArray<MDDItem> *)allKeysIgnoreMultipleTable:(BOOL)ignore;{
-    return [self _keysIgnoreMultipleTable:ignore];
+- (NSArray<MDDItem> *)allPropertysIgnoreMultipleTable:(BOOL)ignore;{
+    return [self _propertyIgnoreMultipleTable:ignore];
 }
 
-- (NSArray<MDDItem> *)_keysIgnoreMultipleTable:(BOOL)ignore;{
+- (NSArray<MDDItem> *)_propertyIgnoreMultipleTable:(BOOL)ignore;{
     if (ignore && [self isMultipleTable]) return nil;
     
-    NSMutableSet<MDDItem> *keys = [NSMutableSet set];
+    NSMutableSet<MDDItem> *property = [NSMutableSet set];
     for (MDDConditionSet *set in self.sets) {
-        NSArray<NSString *> *subkeys = [set _keysIgnoreMultipleTable:ignore];
+        NSArray<NSString *> *subproperty = [set _propertyIgnoreMultipleTable:ignore];
         
-        [keys addObjectsFromArray:subkeys];
+        [property addObjectsFromArray:subproperty];
     }
     for (MDDCondition *condition in self.conditions) {
-        if ([condition.key isKindOfClass:[MDDKey class]]) [keys unionSet:[(MDDKey *)[condition key] keys]];
-        else [keys addObject:condition.key ?: [NSNull null]];
+        if ([condition.property isKindOfClass:[MDDItem class]]) [property unionSet:[(MDDItem *)[condition property] names]];
+        else [property addObject:condition.property ?: [NSNull null]];
     }
     
-    return [keys allObjects];
+    return [property allObjects];
 }
 
 - (MDDDescription *)SQLDescription{
@@ -155,6 +157,7 @@
 
 - (MDDIndex *)index;{
     if ([self isMultipleTable]) return nil;
+    if (![[self tableInfo] respondsToSelector:@selector(indexForConditionSet:)]) return nil;
     
     return [[self tableInfo] indexForConditionSet:self];
 }

@@ -8,13 +8,14 @@
 
 #import "MDDTableInfo.h"
 
-@interface MDDTableInfo ()
+@protocol MDDTableInfoPrivate <MDDTableInfo>
 
 @property (nonatomic, copy, readonly) NSDictionary<NSString *, MDDColumn *> *columnMapper;
 
-@property (nonatomic, copy, readonly) NSDictionary<NSString *, MDDIndex *> *indexMapper;
+@end
 
-@property (nonatomic, copy, readonly) NSDictionary<NSString *, NSString *> *propertyColumnMapper;
-@property (nonatomic, copy, readonly) NSDictionary<NSString *, NSString *> *columnPropertyMapper;
+@interface MDDTableInfo ()<MDDTableInfoPrivate>
+
+@property (nonatomic, copy, readonly) NSDictionary<NSString *, MDDIndex *> *indexMapper;
 
 @end

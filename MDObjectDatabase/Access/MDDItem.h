@@ -12,32 +12,30 @@
 
 @protocol MDDObject;
 @class MDDDescription;
+
 @protocol MDDItem <NSObject>
 @end
 
-@protocol MDDKey <MDDItem>
-@end
-
-@interface MDDKey : MDDDescriptor <MDDKey>
+@interface MDDItem : MDDDescriptor <MDDItem>
 
 @property (nonatomic, strong, readonly) MDDDescriptor *descriptor;
 @property (nonatomic, copy, readonly) NSString *alias;
 
-@property (nonatomic, copy, readonly) NSSet *keys;
+@property (nonatomic, copy, readonly) NSSet *names;
 
-+ (instancetype)keyWithDescriptor:(MDDDescriptor *)descriptor;
-+ (instancetype)keyWithDescriptor:(MDDDescriptor *)descriptor alias:(NSString *)alias;
++ (instancetype)itemWithDescriptor:(MDDDescriptor *)descriptor;
++ (instancetype)itemWithDescriptor:(MDDDescriptor *)descriptor alias:(NSString *)alias;
 
-+ (instancetype)keyWithTableInfo:(MDDTableInfo *)tableInfo keys:(NSSet<NSString *> *)keys;
++ (instancetype)itemWithTableInfo:(id<MDDTableInfo>)tableInfo names:(NSSet<NSString *> *)names;
 
 @end
 
-@interface MDDFuntionKey : MDDKey
+@interface MDDFuntionProperty : MDDItem
 
 @property (nonatomic, copy, readonly) NSString *function;
 
-+ (instancetype)keyWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key function:(MDDFunction)function;
-+ (instancetype)keyWithTableInfo:(MDDTableInfo *)tableInfo key:(NSString *)key function:(MDDFunction)function alias:(NSString *)alias;
++ (instancetype)itemWithTableInfo:(id<MDDTableInfo>)tableInfo name:(NSString *)name function:(MDDFunction)function;
++ (instancetype)itemWithTableInfo:(id<MDDTableInfo>)tableInfo name:(NSString *)name function:(MDDFunction)function alias:(NSString *)alias;
 
 @end
 
@@ -47,21 +45,21 @@
 @property (nonatomic, copy, readonly) NSString *alias;
 
 + (instancetype)set;
-+ (instancetype)setWithTableInfo:(MDDTableInfo *)tableInfo;
++ (instancetype)setWithTableInfo:(id<MDDTableInfo>)tableInfo;
 + (instancetype)setWithDescriptor:(MDDDescriptor *)descriptor;
 + (instancetype)setWithDescriptor:(MDDDescriptor *)descriptor alias:(NSString *)alias;
 
 @end
 
-@interface MDDValue : MDDKey
+@interface MDDValue : MDDItem
 
 @end
 
-@interface NSString (MDDKey)<MDDKey>
+@interface NSString (MDDItem)<MDDItem>
 
 @end
 
-@interface NSNull (MDDKey)<MDDItem>
+@interface NSNull (MDDItem)<MDDItem>
 
 @end
 

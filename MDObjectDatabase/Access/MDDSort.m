@@ -14,19 +14,19 @@
 
 @implementation MDDSort
 
-+ (instancetype)sortWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key ascending:(BOOL)ascending;{
-    MDDSort *sort = [super descriptorWithTableInfo:tableInfo key:key value:nil];
++ (instancetype)sortWithTableInfo:(MDDTableInfo *)tableInfo property:(id<MDDItem>)property ascending:(BOOL)ascending;{
+    MDDSort *sort = [super descriptorWithTableInfo:tableInfo property:property value:nil];
     sort->_ascending = ascending;
     
     return sort;
 }
 
 - (NSString *)description{
-    return [[self dictionaryWithValuesForKeys:@[@"key", @"ascending"]] description];
+    return [[self dictionaryWithValuesForKeys:@[@"property", @"ascending"]] description];
 }
 
 - (MDDDescription *)SQLDescription{
-    MDDColumn *column = [self.tableInfo columnForKey:[self key]];
+    MDDColumn *column = [self.tableInfo columnForProperty:[self property]];
     NSParameterAssert(column);
     
     NSString *SQL = [NSString stringWithFormat:@"%@ %@", [column name], [self ascending] ? @"ASC" : @"DESC"];

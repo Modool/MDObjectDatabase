@@ -19,17 +19,18 @@
 
 @implementation MDDColumn
 
-+ (instancetype)columnWithName:(NSString *)name propertyName:(NSString *)propertyName primary:(BOOL)primary autoincrement:(BOOL)autoincrement attribute:(MDPropertyAttributes *)attribute; {
-    MDDColumn *property = [[self alloc] init];
++ (instancetype)columnWithName:(NSString *)name propertyName:(NSString *)propertyName primary:(BOOL)primary autoincrement:(BOOL)autoincrement attribute:(MDPropertyAttributes *)attribute tableInfo:(id<MDDTableInfo>)tableInfo; {
+    MDDColumn *column = [[self alloc] init];
     
-    property.name = name;
-    property.propertyName = propertyName;
-    property.attribute = attribute;
-    property.primary = primary;
-    property.autoincrement = autoincrement;
-    property.type = autoincrement ? MDDColumnTypeInteger : MDDColumnTypeFromAttribute(attribute);
+    column->_name = [name copy];
+    column->_propertyName = [propertyName copy];
+    column->_attribute = attribute;
+    column->_primary = primary;
+    column->_autoincrement = autoincrement;
+    column->_type = autoincrement ? MDDColumnTypeInteger : MDDColumnTypeFromAttribute(attribute);
+    column->_tableInfo = tableInfo;
     
-    return property;
+    return column;
 }
 
 - (NSUInteger)hash{
@@ -217,14 +218,14 @@
 @implementation MDDLocalColumn
 @dynamic propertyName;
 
-+ (instancetype)columnWithName:(NSString *)name primary:(BOOL)primary autoincrement:(BOOL)autoincrement type:(MDDColumnType)type;{
-    MDDLocalColumn *column = [super columnWithName:name propertyName:nil primary:primary autoincrement:autoincrement attribute:nil];
++ (instancetype)columnWithName:(NSString *)name primary:(BOOL)primary autoincrement:(BOOL)autoincrement type:(MDDColumnType)type tableInfo:(id<MDDTableInfo>)tableInfo;{
+    MDDLocalColumn *column = [super columnWithName:name propertyName:nil primary:primary autoincrement:autoincrement attribute:nil tableInfo:tableInfo];
     column.type = type;
     
     return column;
 }
 
-+ (NSDictionary<NSString *, MDDLocalColumn *> *)columnsWithSQL:(NSString *)SQL tableInfo:(MDDTableInfo *)tableInfo;{
++ (NSDictionary<NSString *, MDDLocalColumn *> *)columnsWithSQL:(NSString *)SQL tableInfo:(id<MDDTableInfo>)tableInfo;{
     SQL = [SQL stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
     
     NSRange range = [SQL rangeOfString:@"("];
@@ -237,21 +238,21 @@
     NSString *unionPattern = @"primary\\s+key\\s+\\((\\s*([a-z]|_){1,}\\s*\\,)*\\s*([a-z]|_){1,}\\s*\\)";
     NSString *compositePattern = @"constraint\\s+([a-z]|_)+\\s+primary\\s+key\\s+\\((\\s*([a-z]|_){1,}\\s*\\,)*\\s*([a-z]|_){1,}\\s*\\)";
     
-    NSString *compositeKeyName = nil;
+    NSString *compositePropertyName = nil;
     NSArray<NSString *> *unionColumnNames = nil;
     range = [SQL rangeOfPattern:compositePattern options:NSRegularExpressionCaseInsensitive error:nil];
-    // constraint pk_t2 primary key ( a, b, c )
+    // constraint pk_t2 primary property ( a, b, c )
     if (range.location != NSNotFound) {
         NSString *compositeString = [SQL substringWithRange:range];
-        unionColumnNames = [self keysFromString:compositeString];
-        compositeKeyName = [compositeString componentsSeparatedByString:@" "][1];
+        unionColumnNames = [self propertyFromString:compositeString];
+        compositePropertyName = [compositeString componentsSeparatedByString:@" "][1];
         
         SQL = [SQL stringByReplacingCharactersInRange:range withString:@""];
     } else {
-        //  primary key ( a, b, c )
+        //  primary property ( a, b, c )
         range = [SQL rangeOfPattern:unionPattern options:NSRegularExpressionCaseInsensitive error:nil];
         if (range.location != NSNotFound) {
-            unionColumnNames = [self keysFromString:[SQL substringWithRange:range]];
+            unionColumnNames = [self propertyFromString:[SQL substringWithRange:range]];
             
             SQL = [SQL stringByReplacingCharactersInRange:range withString:@""];
         }
@@ -260,23 +261,23 @@
     NSArray<NSString *> *SQLs = [SQL componentsSeparatedByString:@","];
     NSMutableDictionary<NSString *, MDDLocalColumn *> *columns = [NSMutableDictionary dictionary];
     for (NSString *SQL in SQLs) {
-        MDDLocalColumn *column = [self localColumnWithSQL:SQL unionColumnNames:unionColumnNames compositeKeyName:compositeKeyName];
+        MDDLocalColumn *column = [self localColumnWithSQL:SQL unionColumnNames:unionColumnNames compositePropertyName:compositePropertyName tableInfo:tableInfo];
         if (!column) continue;
         
-        [columns setObject:column forKey:column.name];
+        columns[column.name] = column;
     }
     
     return [columns copy];
 }
 
-+ (NSArray<NSString *> *)keysFromString:(NSString *)string {
++ (NSArray<NSString *> *)propertyFromString:(NSString *)string {
     NSString *keyString = [string stringOfPattern:@"\\(.*\\)"];
     keyString = [keyString stringByReplacingOccurrencesOfString:@" " withString:@""];
     keyString = [keyString substringWithRange:NSMakeRange(1, keyString.length - 2)];
     return [keyString componentsSeparatedByString:@","];
 }
 
-+ (MDDLocalColumn *)localColumnWithSQL:(NSString *)SQL unionColumnNames:(NSArray<NSString *> *)unionColumnNames compositeKeyName:(NSString *)compositeKeyName{
++ (MDDLocalColumn *)localColumnWithSQL:(NSString *)SQL unionColumnNames:(NSArray<NSString *> *)unionColumnNames compositePropertyName:(NSString *)compositePropertyName tableInfo:(id<MDDTableInfo>)tableInfo;{
     SQL = [SQL stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
     if (![SQL length]) return nil;
     
@@ -327,14 +328,14 @@
     }];
     primary = [unionColumnNames containsObject:name] ?: primary;
  
-    MDDLocalColumn *column = [MDDLocalColumn columnWithName:name primary:primary autoincrement:autoincrement type:type];
+    MDDLocalColumn *column = [MDDLocalColumn columnWithName:name primary:primary autoincrement:autoincrement type:type tableInfo:tableInfo];
     MDDColumnConfiguration *configuration = [MDDColumnConfiguration defaultConfigurationWithColumn:column];
     configuration.unique = unique;
     configuration.length = length;
     configuration.nullabled = nullabled;
     configuration.defaultValue = defaultValue;
     configuration.checkValue = checkValue;
-    configuration.compositeKeyName = ([unionColumnNames containsObject:name] && [compositeKeyName length]) ? compositeKeyName : nil;
+    configuration.compositePropertyName = ([unionColumnNames containsObject:name] && [compositePropertyName length]) ? compositePropertyName : nil;
     
     column.configuration = configuration;
     

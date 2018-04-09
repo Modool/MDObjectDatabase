@@ -8,19 +8,19 @@
 
 #import "MDDatabase.h"
 
-@protocol MDDReferenceDatabaseQueue;
-@class MDDConfiguration, MDDCompat, MDDLogger;
+@protocol MDDReferenceDatabaseQueue, MDDTableInfo, MDDTableConfiguration;
+@class MDDTableConfiguration, MDDViewConfiguration, MDDCompat, MDDLogger;
 @interface MDDatabase ()
 
 @property (nonatomic, strong, readonly) NSRecursiveLock *lock;
 
 @property (nonatomic, strong, readonly) id<MDDReferenceDatabaseQueue> databaseQueue;
 
-@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, MDDTableInfo *> *tableInfos;
+@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, Class> *classes;
 
-@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, MDDConfiguration *> *configurations;
+@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, id<MDDTableInfo>> *infos;
 
-@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, Class> *tableClasses;
+@property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, id<MDDTableConfiguration>> *configurations;
 
 @property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, MDDCompat *> *compats;
 

@@ -27,7 +27,7 @@
     return descriptor;
 }
 
-+ (MDDInserter *)inserterWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;{
++ (MDDInserter *)inserterWithObject:(id)object tableInfo:(id<MDDTableInfo>)tableInfo;{
     NSParameterAssert(object && tableInfo);
     
     NSArray<MDDInsertSetter *> *setters = [MDDInsertSetter settersWithObject:object tableInfo:tableInfo];
@@ -38,7 +38,7 @@
 
 - (MDDDescription *)SQLDescription;{
     NSMutableArray *values = [NSMutableArray array];
-    NSMutableString *SQL = [NSMutableString stringWithFormat:@" INSERT INTO %@ ", [[self tableInfo] tableName]];
+    NSMutableString *SQL = [NSMutableString stringWithFormat:@" INSERT INTO %@ ", [[self tableInfo] name]];
     
     MDDDescription *description = [MDDInsertSetter descriptionWithSetters:[self setters]];
     NSParameterAssert(description);

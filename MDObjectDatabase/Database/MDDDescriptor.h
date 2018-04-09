@@ -8,15 +8,16 @@
 
 #import <Foundation/Foundation.h>
 
-@class MDDTableInfo, MDDDescription;
+@protocol MDDTableInfo;
+@class MDDDescription;
 @interface MDDDescriptor : NSObject
 
-@property (nonatomic, strong, readonly) MDDTableInfo *tableInfo;
+@property (nonatomic, strong, readonly) id<MDDTableInfo> tableInfo;
 
 @property (nonatomic, strong, readonly) MDDDescription *SQLDescription;
 
-+ (instancetype)descriptorWithTableInfo:(MDDTableInfo *)tableInfo;
-- (instancetype)initWithTableInfo:(MDDTableInfo *)tableInfo NS_DESIGNATED_INITIALIZER;
++ (instancetype)descriptorWithTableInfo:(id<MDDTableInfo>)tableInfo;
+- (instancetype)initWithTableInfo:(id<MDDTableInfo>)tableInfo NS_DESIGNATED_INITIALIZER;
 
 @end
 

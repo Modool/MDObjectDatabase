@@ -53,6 +53,24 @@
 
 @end
 
+@interface MDDUserGradeInfo : MDBaseClass
+
+@property (nonatomic, copy) NSString *UID;
+
+@property (nonatomic, copy) NSString *name;
+
+@property (nonatomic, copy) NSString *favor;
+
+@property (nonatomic, assign) NSUInteger age;
+
+@property (nonatomic, copy) NSString *gradeID;
+
+@property (nonatomic, copy) NSString *gradeName;
+
+@property (nonatomic, assign) NSUInteger gradeLevel;
+
+@end
+
 @interface MDDatabaseTestsGlobal : NSObject
 
 + (MDDatabase *)database;

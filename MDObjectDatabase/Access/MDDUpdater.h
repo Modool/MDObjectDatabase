@@ -21,7 +21,7 @@
 
 + (instancetype)updaterWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;
 + (instancetype)updaterWithObject:(id)object properties:(NSSet *)properties tableInfo:(MDDTableInfo *)tableInfo;
-+ (instancetype)updaterWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(MDDTableInfo *)tableInfo;
++ (instancetype)updaterWithObject:(id)object properties:(NSSet *)properties ignoredProperties:(NSSet *)ignoredProperties conditionSet:(MDDConditionSet *)conditionSet tableInfo:(id<MDDTableInfo>)tableInfo;
 
 @end
 

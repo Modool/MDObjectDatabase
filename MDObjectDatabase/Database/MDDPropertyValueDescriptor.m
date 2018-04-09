@@ -1,31 +1,31 @@
 //
-//  MDDKeyValueDescriptor.m
+//  MDDPropertyValueDescriptor.m
 //  MDDatabase
 //
 //  Created by xulinfeng on 2018/3/23.
 //  Copyright © 2018年 markejave. All rights reserved.
 //
 
-#import "MDDKeyValueDescriptor.h"
+#import "MDDPropertyValueDescriptor.h"
 #import "MDDDescription.h"
 
-@implementation MDDKeyValueDescriptor
+@implementation MDDPropertyValueDescriptor
 
-+ (instancetype)descriptorWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key value:(id<NSObject, NSCopying>)value;{
++ (instancetype)descriptorWithTableInfo:(id<MDDTableInfo>)tableInfo property:(id<MDDItem>)property value:(id<MDDItem>)value;{
     NSParameterAssert(tableInfo);
-    MDDKeyValueDescriptor *descriptor = [super descriptorWithTableInfo:tableInfo];
-    descriptor->_key = key;
-    descriptor->_value = [value isKindOfClass:[NSSet class]] ? [(NSSet *)value allObjects] : value;
+    MDDPropertyValueDescriptor *descriptor = [super descriptorWithTableInfo:tableInfo];
+    descriptor->_property = property;
+    descriptor->_value = [(id)value isKindOfClass:[NSSet class]] ? (id)[(NSSet *)value allObjects] : value;
     
     return descriptor;
 }
 
-+ (MDDDescription *)descriptionWithDescriptors:(NSArray<MDDKeyValueDescriptor *> *)descriptors separator:(NSString *)separator{
++ (MDDDescription *)descriptionWithDescriptors:(NSArray<MDDPropertyValueDescriptor *> *)descriptors separator:(NSString *)separator{
     if (![descriptors count]) return nil;
     
     NSMutableArray *SQLs = [NSMutableArray array];
     NSMutableArray *values = [NSMutableArray array];
-    for (MDDKeyValueDescriptor *descriptor in descriptors) {
+    for (MDDPropertyValueDescriptor *descriptor in descriptors) {
         MDDDescription *description = descriptor.SQLDescription;
         
         if (description) {
@@ -39,7 +39,7 @@
 }
 
 - (NSString *)description{
-    return [[self dictionaryWithValuesForKeys:@[@"key", @"value"]] description];
+    return [[self dictionaryWithValuesForKeys:@[@"property", @"value"]] description];
 }
 
 @end

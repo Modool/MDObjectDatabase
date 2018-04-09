@@ -16,8 +16,11 @@ typedef NS_ENUM(NSUInteger, MDDColumnType) {
     MDDColumnTypeData,
 };
 
+@protocol MDDTableInfo;
 @class MDPropertyAttributes;
 @interface MDDColumn : NSObject
+
+@property (nonatomic, weak, readonly) id<MDDTableInfo> tableInfo;
 
 @property (nonatomic, copy, readonly) NSString *name;
 
@@ -29,7 +32,8 @@ typedef NS_ENUM(NSUInteger, MDDColumnType) {
 
 @property (nonatomic, assign, readonly) MDDColumnType type;
 
-+ (instancetype)columnWithName:(NSString *)name propertyName:(NSString *)propertyName primary:(BOOL)primary autoincrement:(BOOL)autoincrement attribute:(MDPropertyAttributes *)attribute;
+
++ (instancetype)columnWithName:(NSString *)name propertyName:(NSString *)propertyName primary:(BOOL)primary autoincrement:(BOOL)autoincrement attribute:(MDPropertyAttributes *)attribute tableInfo:(id<MDDTableInfo>)tableInfo;
 
 // Objective-C class to database value
 - (id)transformValue:(id)value;

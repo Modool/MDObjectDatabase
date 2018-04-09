@@ -6,11 +6,11 @@
 //  Copyright © 2018年 markejave. All rights reserved.
 //
 
-@class MDDTableInfo;
+@protocol MDDTableInfo;
 @interface NSObject (MDDatabase)
 
-- (id)primaryValurWithTableInfo:(MDDTableInfo *)tableInfo;
-- (void)setPrimaryValue:(id)value tableInfo:(MDDTableInfo *)tableInfo;
+- (id)primaryValurWithTableInfo:(id<MDDTableInfo>)tableInfo;
+- (void)setPrimaryValue:(id)value tableInfo:(id<MDDTableInfo>)tableInfo;
 
 @end
 

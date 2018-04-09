@@ -16,27 +16,27 @@
 
 @implementation MDDCondition
 
-+ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo primaryValue:(id<NSObject, NSCopying>)value;{
++ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo primaryValue:(id<MDDItem>)value;{
     return [self conditionWithTableInfo:tableInfo primaryValue:value operation:MDDOperationEqual];
 }
 
-+ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo primaryValue:(id<NSObject, NSCopying>)value operation:(MDDOperation)operation;{
-    return [self conditionWithTableInfo:tableInfo key:nil value:value operation:operation];
++ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo primaryValue:(id<MDDItem>)value operation:(MDDOperation)operation;{
+    return [self conditionWithTableInfo:tableInfo property:nil value:value operation:operation];
 }
 
-+ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key value:(id<NSObject, NSCopying>)value;{
-    return [self conditionWithTableInfo:tableInfo key:key value:value operation:MDDOperationEqual];
++ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo property:(id<MDDItem>)property value:(id<MDDItem>)value;{
+    return [self conditionWithTableInfo:tableInfo property:property value:value operation:MDDOperationEqual];
 }
 
-+ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key value:(id<NSObject, NSCopying>)value operation:(MDDOperation)operation;{
-    return [self conditionWithTableInfo:tableInfo key:key value:value operation:operation transform:nil];
++ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo property:(id<MDDItem>)property value:(id<MDDItem>)value operation:(MDDOperation)operation;{
+    return [self conditionWithTableInfo:tableInfo property:property value:value operation:operation transform:nil];
 }
 
-+ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key value:(id<NSObject, NSCopying>)value operation:(MDDOperation)operation transform:(NSString *)transform;{
-    return [self conditionWithTableInfo:tableInfo key:key value:value operation:operation transforms:transform ? @[transform] : nil];
++ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo property:(id<MDDItem>)property value:(id<MDDItem>)value operation:(MDDOperation)operation transform:(NSString *)transform;{
+    return [self conditionWithTableInfo:tableInfo property:property value:value operation:operation transforms:transform ? @[transform] : nil];
 }
 
-+ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo key:(id<MDDItem>)key value:(id<NSObject, NSCopying>)value operation:(MDDOperation)operation transforms:(NSArray<NSString *> *)transforms;{
++ (instancetype)conditionWithTableInfo:(MDDTableInfo *)tableInfo property:(id<MDDItem>)property value:(id<MDDItem>)value operation:(MDDOperation)operation transforms:(NSArray<NSString *> *)transforms;{
     value = [value isKindOfClass:[NSSet class]] ? [(NSSet *)value allObjects] : value;
     
     if ([value isKindOfClass:[NSArray class]]) {
@@ -46,7 +46,7 @@
         operation = [values count] > 1 ? (isSetOperation ? operation : MDDOperationIn) : (isSetOperation ? MDDOperationEqual : operation);
         value = [values count] > 1 ? value : [values firstObject];
     }
-    MDDCondition *condition = [super descriptorWithTableInfo:tableInfo key:key value:value = value ?: [NSNull null]];
+    MDDCondition *condition = [super descriptorWithTableInfo:tableInfo property:property value:value ?: [NSNull null]];
     condition->_operation = operation;
     condition->_transforms = [transforms copy];
         
@@ -61,21 +61,21 @@
     if (![object isKindOfClass:[MDDCondition class]]) return NO;
     if ([object operation] != [self operation]) return NO;
     
-    return ([object key] == [self key] || [[object key] isEqual:[self key]]) && ([object value] == [self value] || [[object value] isEqual:[self value]]);
+    return ([object property] == [self property] || [[object property] isEqual:[self property]]) && ([object value] == [self value] || [[object value] isEqual:[self value]]);
 }
 
 - (NSUInteger)hash{
-    return [self operation] ^ [[self key] hash] ^ [[self value] hash];
+    return [self operation] ^ [[self property] hash] ^ [[self value] hash];
 }
 
 - (NSString *)description{
-    return [[self dictionaryWithValuesForKeys:@[@"key", @"value", @"operation"]] description];
+    return [[self dictionaryWithValuesForKeys:@[@"property", @"value", @"operation"]] description];
 }
 
 #pragma mark - public
 
 - (MDDDescription *)SQLDescription{
-    id key = [self key];
+    id property = [self property];
     id value = [self value];
     
     MDDColumn *column = nil;
@@ -83,14 +83,13 @@
     NSString *replacement = nil;
     NSMutableArray *values = [NSMutableArray array];
     
-    if ([[self key] isKindOfClass:[MDDKey class]]) {
-        MDDKey *_key = key;
-        MDDDescription *descrition = [_key SQLDescription];
+    if ([[self property] isKindOfClass:[MDDItem class]]) {
+        MDDDescription *descrition = [property SQLDescription];
         
         columnName = [NSString stringWithFormat:@" ( %@ ) ", [descrition SQL]];
         [values addObjectsFromArray:[descrition values]];
     } else {
-        column = [self.tableInfo columnForKey:self.key];
+        column = [self.tableInfo columnForProperty:self.property];
         NSParameterAssert(column);
         
         columnName = column.name;

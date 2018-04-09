@@ -71,4 +71,8 @@
     self.indexIncrement = increment;
 }
 
+- (void)bindViewIncrement:(MDDCompatResult (^)(MDDCompatOperation operation, MDDLocalView *localView, MDDViewInfo *view))increment;{
+    
+}
+
 @end

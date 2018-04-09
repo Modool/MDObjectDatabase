@@ -8,18 +8,18 @@
 
 #import "MDDQuery.h"
 
-@class MDDFuntionKey;
+@class MDDFuntionProperty;
 @interface MDDFunctionQuery : MDDQuery
 
 @property (nonatomic, copy, readonly) NSString *alias;
 
-+ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key;
-+ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key conditionSet:(MDDConditionSet *)conditionSet;
-+ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet;
++ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property;
++ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property conditionSet:(MDDConditionSet *)conditionSet;
++ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet;
 
-+ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key alias:(NSString *)alias;
-+ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;
-+ (instancetype)fuctionQueryWithKey:(MDDFuntionKey *)key set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;
++ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property alias:(NSString *)alias;
++ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;
++ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;
 
 @end
 

@@ -25,7 +25,7 @@
 }
 
 - (MDDDescription *)SQLDescription{
-    NSMutableString *SQL = [NSMutableString stringWithFormat:@" DELETE FROM %@ ", [[self tableInfo] tableName]];
+    NSMutableString *SQL = [NSMutableString stringWithFormat:@" DELETE FROM %@ ", [[self tableInfo] name]];
     
     NSArray *values = @[];
     MDDDescription *description = [[self conditionSet] SQLDescription];

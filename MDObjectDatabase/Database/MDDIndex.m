@@ -69,18 +69,18 @@ const NSUInteger MDDIndexMaximumPropertyNumber = 6;
 - (void)setTableInfo:(MDDTableInfo *)tableInfo{
     if (_tableInfo != tableInfo) {
         _tableInfo = tableInfo;
-        _tableName = [tableInfo tableName];
+        _tableName = [tableInfo name];
         
         NSMutableArray<NSString *> *columnNames = [NSMutableArray array];
         for (NSString *propertyName in _propertyNames) {
-            MDDColumn *column = [tableInfo columnForKey:propertyName];
+            MDDColumn *column = [tableInfo columnForProperty:propertyName];
             [columnNames addObject:[column name]];
         }
         _columnNames = [columnNames copy];
         _name = _name ?: [NSString stringWithFormat:@"index_of_%@_%@", _tableName, [columnNames componentsJoinedByString:@"_"]];
         
         //    @"CREATE %@ INDEX %@ on %@ (%@)"
-        _creatingSQL = [NSString stringWithFormat:MDDatabaseCreateIndexSQL, _unique ? @"UNIQUE" : @"", _name, [tableInfo tableName], [columnNames componentsJoinedByString:@", "]];
+        _creatingSQL = [NSString stringWithFormat:MDDatabaseCreateIndexSQL, _unique ? @"UNIQUE" : @"", _name, [tableInfo name], [columnNames componentsJoinedByString:@", "]];
     }
 }
 

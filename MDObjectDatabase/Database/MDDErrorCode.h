@@ -15,10 +15,11 @@ typedef NS_ENUM(NSUInteger, MDDErrorCode){
     MDDErrorCodeNone,
     MDDErrorCodeConfigurationExisted,
     MDDErrorCodeColumnConfigurationExisted,
-    MDDErrorCodeNonePrimaryKey,
+    MDDErrorCodeNonePrimaryProperty,
     MDDErrorCodeNonconformProtocol,
     MDDErrorCodeTableNonexistent,
     MDDErrorCodeTableCreateFailed,
     MDDErrorCodeTableCompatFailed,
+    MDDErrorCodeViewColumnExist,
 };
 

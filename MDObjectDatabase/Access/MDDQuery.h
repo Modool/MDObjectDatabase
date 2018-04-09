@@ -9,15 +9,15 @@
 #import "MDDDescriptor.h"
 
 @protocol MDDItem, MDDObject;
-@class MDDSort, MDDConditionSet, MDDSet, MDDKey;
+@class MDDSort, MDDConditionSet, MDDSet, MDDItem;
 @interface MDDQuery : MDDDescriptor
 
-@property (nonatomic, strong, readonly) MDDTableInfo *tableInfo NS_UNAVAILABLE;
+@property (nonatomic, strong, readonly) id<MDDTableInfo> tableInfo NS_UNAVAILABLE;
 @property (nonatomic, strong, readonly) MDDSet *set;
 @property (nonatomic, strong, readonly) MDDConditionSet *conditionSet;
 @property (nonatomic, assign, readonly) NSRange range;
 
-@property (nonatomic, copy, readonly) NSSet<MDDKey *> *keys;
+@property (nonatomic, copy, readonly) NSSet<MDDItem *> *property;
 @property (nonatomic, copy, readonly) NSArray<MDDSort *> *sorts;
 
 + (instancetype)queryWithSorts:(NSArray<MDDSort *> *)sorts;
@@ -26,25 +26,25 @@
 + (instancetype)queryWithConditionSet:(MDDConditionSet *)conditionSet;
 + (instancetype)queryWithConditionSet:(MDDConditionSet *)conditionSet range:(NSRange)range;
 
-+ (instancetype)queryWithKey:(MDDKey *)key;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys range:(NSRange)range;
++ (instancetype)queryWithProperty:(MDDItem *)property;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property range:(NSRange)range;
 
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys sorts:(NSArray<MDDSort *> *)sorts;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property sorts:(NSArray<MDDSort *> *)sorts;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;
 
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys conditionSet:(MDDConditionSet *)conditionSet;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range objectClass:(Class<MDDObject>)objectClass;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range transform:(id (^)(NSDictionary *result))transform;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property conditionSet:(MDDConditionSet *)conditionSet;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range objectClass:(Class<MDDObject>)objectClass;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range transform:(id (^)(NSDictionary *result))transform;
 
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys set:(MDDSet *)set;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range objectClass:(Class<MDDObject>)objectClass;
-+ (instancetype)queryWithKeys:(NSSet<MDDKey *> *)keys set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range transform:(id (^)(NSDictionary *result))transform;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property set:(MDDSet *)set;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range objectClass:(Class<MDDObject>)objectClass;
++ (instancetype)queryWithPropertys:(NSSet<MDDItem *> *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range transform:(id (^)(NSDictionary *result))transform;
 
 @end
 
