@@ -106,10 +106,6 @@ NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
 }
 
 - (id<MDDTableInfo>)requireInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;{
-    if (self.inTransaction) {
-        return [self _requireInfoWithClass:class error:error];
-    }
-    
     [[self lock] lock];
     id<MDDTableInfo> info = [self _requireInfoWithClass:class error:error];
     [[self lock] unlock];
@@ -308,14 +304,14 @@ NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
 
 - (BOOL)_appendColumns:(NSSet<MDDColumn *> *)columns info:(id<MDDTableInfo>)info configurations:(NSDictionary<NSString *, MDDColumnConfiguration *> *)configurations{
     __block BOOL success = NO;
-    [self executeInTransaction:^(id<MDDReferenceDatabase> db, BOOL *rollback) {
+    [[self databaseQueue] inTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
         for (MDDColumn *column in columns) {
             MDDColumnConfiguration *configuration = configurations[[column propertyName]];
             NSString *description = [self columnDescriptionWithColumn:column configuration:configuration union:NO];
             description = [NSString stringWithFormat:@" %@ %@ ", MDDatabaseAddColumnCommand, description ?: @""];
             
             NSString *SQL = [NSString stringWithFormat:MDDatabaseAlterTableSQL, [info name], description];
-            BOOL state = [db executeUpdate:SQL];
+            BOOL state = [database executeUpdate:SQL];
             
             *rollback = !state;
             if (!state) break;
@@ -471,7 +467,7 @@ NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
 
 - (BOOL)_appendIndexes:(NSSet<MDDIndex *> *)indexes{
     __block BOOL success = NO;
-    [self executeInTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
+    [[self databaseQueue] inTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
         for (MDDIndex *index in indexes) {
             BOOL state = [database executeUpdate:[index creatingSQL]];
             *rollback = !state;
@@ -484,7 +480,7 @@ NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
 
 - (BOOL)_deleteLocalIndexes:(NSSet<MDDLocalIndex *> *)indexes{
     __block BOOL success = NO;
-    [self executeInTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
+    [[self databaseQueue] inTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
         for (MDDLocalIndex *index in indexes) {
             BOOL state = [database executeUpdate:[index droppingSQL]];
             

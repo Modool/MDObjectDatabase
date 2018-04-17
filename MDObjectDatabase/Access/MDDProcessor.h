@@ -107,7 +107,7 @@
 
 @protocol MDDCoreProcessor <NSObject>
 
-- (BOOL)executeInserter:(MDDInserter *)inserter block:(void (^)(NSUInteger rowID))block;
+- (BOOL)executeInserter:(MDDInserter *)inserter block:(void (^)(UInt64 rowID))block;
 - (BOOL)executeInserters:(MDDInserter *(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))resultBlock;
 
 - (BOOL)executeDeleter:(MDDDeleter *)deleter;
@@ -122,7 +122,7 @@
 - (void)executeQuerySQL:(NSString *)SQL values:(NSArray *)values block:(void (^)(NSDictionary *dictionary))block;
 - (BOOL)executeQuerySQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block result:(void (^)(NSUInteger index, NSDictionary *dictionary, BOOL *stop))resultBlock;
 
-- (BOOL)executeUpdateSQL:(NSString *)query values:(NSArray *)values block:(void (^)(id<MDDReferenceDatabase> database))block;
-- (BOOL)executeUpdateSQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block block:(void (^)(BOOL state, id<MDDReferenceDatabase>  database, NSUInteger index, BOOL *stop))resultBlock;
+- (BOOL)executeUpdateSQL:(NSString *)query values:(NSArray *)values block:(void (^)(UInt64 lastRowID))block;
+- (BOOL)executeUpdateSQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block block:(void (^)(BOOL state, UInt64 lastRowID, NSUInteger index, BOOL *stop))resultBlock;
 
 @end

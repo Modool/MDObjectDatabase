@@ -12,18 +12,43 @@
 
 @implementation MDDatabase (Executing)
 
-- (void)executeInTransaction:(void (^)(id<MDDReferenceDatabase> database, BOOL *rollback))block {
+- (BOOL)executeInTransaction:(void (^)(BOOL (^update)(NSString *SQL, NSArray *arguments, UInt64 *lastRowID), void (^query)(NSString *SQL, NSArray *arguments, void (^taker)(NSDictionary *dictionary)), BOOL *rollback))block; {
+    __block BOOL success = YES;
     [[self lock] lock];
     [[self databaseQueue] inTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
         database.logsErrors = YES;
-        
-        self.inTransaction = YES;
-        
-        if (block) block(database, rollback);
-        
-        self.inTransaction = NO;
+        @try {
+            BOOL (^update)(NSString *SQL, NSArray *arguments, UInt64 *lastRowID) = ^BOOL (NSString *SQL, NSArray *arguments, UInt64 *lastRowID){
+                BOOL result = NO;
+                if (!arguments || ![arguments count]) {
+                    result = [database executeUpdate:SQL];
+                } else {
+                    result = [database executeUpdate:SQL withArgumentsInArray:arguments];
+                }
+                if (lastRowID) *lastRowID = [database lastInsertRowId];
+                
+                return result;
+            };
+            void (^query)(NSString *SQL, NSArray *arguments, void (^taker)(NSDictionary *dictionary)) = ^void (NSString *SQL, NSArray *arguments, void (^taker)(NSDictionary *dictionary)){
+                id<MDDReferenceDatabaseResultSet> resultSet = nil;
+                if (!arguments || ![arguments count]) {
+                    resultSet = [database executeQuery:SQL];
+                } else {
+                    resultSet = [database executeQuery:SQL withArgumentsInArray:arguments];
+                }
+                while ([resultSet next]) {
+                    taker([resultSet resultDictionary]);
+                }
+                [resultSet close];
+            };
+            if (block) block(update, query, rollback);
+        } @catch (NSException *exception) {
+            *rollback = YES;
+            success = NO;
+        }
     }];
     [[self lock] unlock];
+    return success;
 }
 
 - (BOOL)executeUpdateSQL:(NSString *)SQL;{

@@ -57,8 +57,9 @@
     MDDInserter *inserter = [MDDInserter inserterWithObject:object tableInfo:_tableInfo];
     NSParameterAssert(inserter);
     
-    return [self executeInserter:inserter block:^(NSUInteger rowID) {
-        [object setPrimaryValue:[@(rowID) description] tableInfo:_tableInfo];
+    __weak __block typeof(self) weak_self = self;
+    return [self executeInserter:inserter block:^(UInt64 rowID) {
+        [object setPrimaryValue:[@(rowID) description] tableInfo:weak_self.tableInfo];
     }];
 }
 
@@ -68,20 +69,23 @@
         return [self insertWithObject:[objects firstObject]];
     }
 
+    __weak __block typeof(self) weak_self = self;
     return [self insertWithObjectsWithBlock:^id(NSUInteger index, BOOL *stop) {
         *stop = index >= (objects.count - 1);
         return objects[index];
     } block:^(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop) {
         id object = objects[index];
-        [object setPrimaryValue:[@(rowID) description] tableInfo:_tableInfo];
+        [object setPrimaryValue:[@(rowID) description] tableInfo:weak_self.tableInfo];
     }];
 }
 
 - (BOOL)insertWithObjectsWithBlock:(id(^)(NSUInteger index, BOOL *stop))block block:(void (^)(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop))resultBlock;{
+    
+    __weak __block typeof(self) weak_self = self;
     return [self executeInserters:^MDDInserter *(NSUInteger index, BOOL *stop) {
         id object = block(index, stop);
         NSParameterAssert(object);
-        return [MDDInserter inserterWithObject:object tableInfo:_tableInfo];
+        return [MDDInserter inserterWithObject:object tableInfo:weak_self.tableInfo];
     } block:^(BOOL state, UInt64 rowID, NSUInteger index, BOOL *stop) {
         if (resultBlock) resultBlock(state, rowID, index, stop);
     }];
@@ -182,13 +186,14 @@
     ignoredProperties = ignoredProperties ?: [NSSet set];
     conditionPropertys = conditionPropertys && [conditionPropertys count] ? conditionPropertys : [_tableInfo primaryProperties];
     
+    __weak __block typeof(self) weak_self = self;
     return [self updateWithObjectsWithBlock:^id(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop) {
         *stop = index >= (objects.count - 1);
         id object = objects[index];
         
         NSMutableArray<MDDCondition *> *conditions = [[NSMutableArray alloc] init];
         for (NSString *conditionProperty in conditionPropertys) {
-            MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo property:conditionProperty value:[object valueForKey:conditionProperty]];
+            MDDCondition *condition = [MDDCondition conditionWithTableInfo:weak_self.tableInfo property:conditionProperty value:[object valueForKey:conditionProperty]];
             NSParameterAssert(condition);
             
             [conditions addObject:condition];
@@ -202,6 +207,8 @@
 }
 
 - (BOOL)updateWithObjectsWithBlock:(id(^)(NSUInteger index, NSSet<NSString *> **propertiesPtr, NSSet<NSString *> **ignoredPropertiesPtr, MDDConditionSet **conditionSetPtr, BOOL *stop))block result:(void (^)(BOOL state, NSUInteger index, BOOL *stop))result;{
+    
+    __weak __block typeof(self) weak_self = self;
     return [self executeUpdaters:^MDDUpdater *(NSUInteger index, BOOL *stop) {
         NSSet<NSString *> *properties = nil;
         NSSet<NSString *> *ignoredProperties = nil;
@@ -209,12 +216,12 @@
         id object = block(index, &properties, &ignoredProperties, &conditionSet, stop);
         
         if (!conditionSet) {
-            conditionSet = [self defaultUpdateConditionSetWithTableInfo:_tableInfo object:object];
+            conditionSet = [self defaultUpdateConditionSetWithTableInfo:weak_self.tableInfo object:object];
         }
         NSMutableSet *rquiredIgnoredProperties = [ignoredProperties ?: [NSSet set] mutableCopy];
         [rquiredIgnoredProperties addObjectsFromArray:[conditionSet allPropertysIgnoreMultipleTable:YES]];
         
-        return [MDDUpdater updaterWithObject:object properties:properties ignoredProperties:rquiredIgnoredProperties conditionSet:conditionSet tableInfo:_tableInfo];
+        return [MDDUpdater updaterWithObject:object properties:properties ignoredProperties:rquiredIgnoredProperties conditionSet:conditionSet tableInfo:weak_self.tableInfo];
     } block:nil];
 }
 

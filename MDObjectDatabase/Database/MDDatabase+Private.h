@@ -24,7 +24,5 @@
 
 @property (nonatomic, strong, readonly) NSMutableDictionary<NSString *, MDDCompat *> *compats;
 
-@property (nonatomic, assign) BOOL inTransaction;
-
 @end
 

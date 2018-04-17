@@ -28,9 +28,47 @@
     _database = [[MDDatabaseCenter defaultCenter] requrieDatabaseWithDatabaseQueue:queue];
 }
 
-- (void)testAddConfiguration{
+- (void)testAddTableConfiguration{
+    MDDTableConfiguration *tableConfiguration = [MDDTableConfiguration configurationWithClass:[MDDTestClass class] propertyMapper:[MDDTestClass tableMapper] primaryProperty:@"objectID"];
+    NSError *error = nil;
+    MDDCompat *compat = [_database addTableConfiguration:tableConfiguration error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(compat);
     
-//    _database addConfiguration:(MDDTableConfiguration *) error:(NSError *__autoreleasing *)
+    tableConfiguration = [MDDTableConfiguration configurationWithClass:[MDDUser class] primaryProperty:@"objectID"];
+    compat = [_database addTableConfiguration:tableConfiguration error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(compat);
+    
+    tableConfiguration = [MDDTableConfiguration configurationWithClass:[MDDGrade class] primaryProperty:@"objectID"];
+    compat = [_database addTableConfiguration:tableConfiguration error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(compat);
+}
+
+- (void)testAddViewConfiguration{
+    id<MDDTableInfo> userInfo = [_database requireInfoWithClass:[MDDUser class] error:nil];
+    XCTAssertNotNil(userInfo);
+    
+    id<MDDTableInfo> gradeInfo = [_database requireInfoWithClass:[MDDGrade class] error:nil];
+    XCTAssertNotNil(gradeInfo);
+    
+    MDDValue *value = [MDDConditionValue itemWithTableInfo:userInfo names:NSSetObject(@MDDKeyPath(MDDUser, gradeID))];
+    MDDConditionSet *condition = [MDDConditionSet setWithCondition:[MDDCondition conditionWithTableInfo:gradeInfo primaryValue:value]];
+    MDDViewConfiguration *viewConfiguration = [MDDViewConfiguration configurationWithClass:[MDDUserGradeInfo class] name:NSStringFromClass([MDDUserGradeInfo class]) propertyMapper:[MDDUserGradeInfo tableMapper] propertyColumns:nil conditionSet:condition];
+    
+    NSError *error = nil;
+    [viewConfiguration addColumn:[userInfo columnForProperty:@MDDKeyPath(MDDUser, objectID)] asPropertyNamed:@MDDKeyPath(MDDUserGradeInfo, UID) error:&error];
+    [viewConfiguration addColumn:[userInfo columnForProperty:@MDDKeyPath(MDDUser, name)] asPropertyNamed:@MDDKeyPath(MDDUserGradeInfo, name) error:&error];
+    [viewConfiguration addColumn:[userInfo columnForProperty:@MDDKeyPath(MDDUser, favor)] asPropertyNamed:@MDDKeyPath(MDDUserGradeInfo, favor) error:&error];
+    
+    [viewConfiguration addColumn:[gradeInfo columnForProperty:@MDDKeyPath(MDDGrade, objectID)] asPropertyNamed:@MDDKeyPath(MDDUserGradeInfo, gradeID) error:&error];
+    [viewConfiguration addColumn:[gradeInfo columnForProperty:@MDDKeyPath(MDDGrade, name)] asPropertyNamed:@MDDKeyPath(MDDUserGradeInfo, gradeName) error:&error];
+    [viewConfiguration addColumn:[gradeInfo columnForProperty:@MDDKeyPath(MDDGrade, level)] asPropertyNamed:@MDDKeyPath(MDDUserGradeInfo, gradeLevel) error:&error];
+    
+    MDDCompat *compat = [_database addViewConfiguration:viewConfiguration error:&error];
+    XCTAssertNil(error);
+    XCTAssertNotNil(compat);
 }
 
 - (void)testPerformanceExample {

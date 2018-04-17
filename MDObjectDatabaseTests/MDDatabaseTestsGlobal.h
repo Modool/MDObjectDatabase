@@ -27,6 +27,8 @@
 
 @property (nonatomic, assign) BOOL boolValue;
 
++ (NSDictionary *)tableMapper;
+
 @end
 
 @interface MDDUser : MDBaseClass
@@ -68,6 +70,8 @@
 @property (nonatomic, copy) NSString *gradeName;
 
 @property (nonatomic, assign) NSUInteger gradeLevel;
+
++ (NSDictionary *)tableMapper;
 
 @end
 

@@ -11,7 +11,7 @@
 @protocol MDDReferenceDatabase;
 @interface MDDatabase (Executing)
 
-- (void)executeInTransaction:(void (^)(id<MDDReferenceDatabase> database, BOOL *rollback))block;
+- (BOOL)executeInTransaction:(void (^)(BOOL (^update)(NSString *SQL, NSArray *arguments, UInt64 *lastRowID), void (^query)(NSString *SQL, NSArray *arguments, void (^taker)(NSDictionary *dictionary)), BOOL *rollback))block;
 
 - (BOOL)executeUpdateSQL:(NSString *)SQL;
 

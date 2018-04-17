@@ -22,11 +22,11 @@
 
 @implementation MDDProcessor (MDDatabase)
 
-- (BOOL)executeInserter:(MDDInserter *)inserter block:(void (^)(NSUInteger rowID))block;{
+- (BOOL)executeInserter:(MDDInserter *)inserter block:(void (^)(UInt64 rowID))block;{
     NSParameterAssert(inserter);
     MDDDescription *description = [inserter SQLDescription];
-    return [self executeUpdateSQL:[description SQL] values:[description values] block:^(id<MDDReferenceDatabase> database) {
-        if (block) block([database lastInsertRowId]);
+    return [self executeUpdateSQL:[description SQL] values:[description values] block:^(UInt64 lastRowID) {
+        if (block) block(lastRowID);
     }];
 }
 
@@ -41,8 +41,8 @@
         
         *values = [description values];
         return [description SQL];
-    } block:^(BOOL state, id<MDDReferenceDatabase> database, NSUInteger index, BOOL *stop) {
-        if (resultBlock) resultBlock(state, [database lastInsertRowId], index, stop);
+    } block:^(BOOL state, UInt64 lastRowID, NSUInteger index, BOOL *stop) {
+        if (resultBlock) resultBlock(state, lastRowID, index, stop);
     }];
 }
 
@@ -63,7 +63,7 @@
         
         *values = [description values];
         return [description SQL];
-    } block:^(BOOL state, id<MDDReferenceDatabase> database, NSUInteger index, BOOL *stop) {
+    } block:^(BOOL state, UInt64 lastRowID, NSUInteger index, BOOL *stop) {
         if (resultBlock) resultBlock(state, index, stop);
     }];
 }
@@ -85,7 +85,7 @@
         
         *values = [description values];
         return [description SQL];
-    } block:^(BOOL state, id<MDDReferenceDatabase> database, NSUInteger index, BOOL *stop) {
+    } block:^(BOOL state, UInt64 lastRowID, NSUInteger index, BOOL *stop) {
         if (resultBlock) resultBlock(state, index, stop);
     }];
 }
@@ -124,36 +124,23 @@
 
 - (BOOL)executeQuerySQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block result:(void (^)(NSUInteger index, NSDictionary *dictionary, BOOL *stop))resultBlock;{
     NSParameterAssert(block && resultBlock);
-    __block BOOL success = YES;
-    [[self database] executeInTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
-        @try {
-            NSUInteger index = 0;
-            BOOL stop = NO;
-            while (!stop) {
-                NSArray *values = nil;
-                NSString *SQL = block(index, &values, &stop);
-                
-                index++;
-                if (![SQL length]) continue;
-                
-                MDDLog(MDDLoggerLevelInfo, @"%@\n%@", SQL, values);
-                id<MDDReferenceDatabaseResultSet> resultSet = nil;
-                if (!values || ![values count]) {
-                    resultSet = [database executeQuery:SQL];
-                } else {
-                    resultSet = [database executeQuery:SQL withArgumentsInArray:values];
-                }
-                while ([resultSet next]) {
-                    if (resultBlock) resultBlock(index - 1, [resultSet resultDictionary], &stop);
-                }
-                [resultSet close];
-            }
-        } @catch (NSException *exception) {
-            *rollback = YES;
-            success = NO;
+    
+    return [[self database] executeInTransaction:^(BOOL (^update)(NSString *SQL, NSArray *arguments, UInt64 *lastRowID), void (^query)(NSString *SQL, NSArray *arguments, void (^taker)(NSDictionary *dictionary)), BOOL *rollback) {
+        NSUInteger index = 0;
+        __block BOOL stop = NO;
+        while (!stop) {
+            NSArray *values = nil;
+            NSString *SQL = block(index, &values, &stop);
+            
+            index++;
+            if (![SQL length]) continue;
+            
+            MDDLog(MDDLoggerLevelInfo, @"%@\n%@", SQL, values);
+            query(SQL, values, ^(NSDictionary *dictionary){
+                if (resultBlock) resultBlock(index - 1, dictionary, &stop);
+            });
         }
     }];
-    return success;
 }
 
 - (BOOL)executeUpdateSQL:(NSString *)SQL values:(NSArray *)values block:(void (^)(id<MDDReferenceDatabase> database))block;{
@@ -162,37 +149,27 @@
     return [[self database] executeUpdateSQL:SQL withArgumentsInArray:values block:block];
 }
 
-- (BOOL)executeUpdateSQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block block:(void (^)(BOOL state, id<MDDReferenceDatabase>  database, NSUInteger index, BOOL *stop))resultBlock;{
+- (BOOL)executeUpdateSQLs:(NSString *(^)(NSUInteger index, NSArray **values, BOOL *stop))block block:(void (^)(BOOL state, UInt64 lastRowID, NSUInteger index, BOOL *stop))resultBlock;{
     NSParameterAssert(block && resultBlock);
-    __block BOOL success = YES;
-    [[self database] executeInTransaction:^(id<MDDReferenceDatabase> database, BOOL *rollback) {
-        @try {
-            NSUInteger index = 0;
-            BOOL stop = NO;
-            BOOL result = YES;
-            while (!stop && result) {
-                NSArray *values = nil;
-                NSString *SQL = block(index, &values, &stop);
-                index++;
-                
-                if (![SQL length]) continue;
-                
-                MDDLog(MDDLoggerLevelInfo, @"%@\n%@", SQL, values);
-                if (!values || ![values count]) {
-                    result = [database executeUpdate:SQL];
-                } else {
-                    result = [database executeUpdate:SQL withArgumentsInArray:values];
-                }
-                
-                if (resultBlock) resultBlock(result, database, index - 1, &stop);
-            }
-        } @catch (NSException *exception) {
-            *rollback = YES;
-            success = NO;
+    return [[self database] executeInTransaction:^(BOOL (^update)(NSString *SQL, NSArray *arguments, UInt64 *lastRowID), void (^query)(NSString *SQL, NSArray *arguments, void (^taker)(NSDictionary *dictionary)), BOOL *rollback) {
+        NSUInteger index = 0;
+        BOOL stop = NO;
+        BOOL result = YES;
+        while (!stop && result) {
+            NSArray *values = nil;
+            NSString *SQL = block(index, &values, &stop);
+            index++;
+            
+            if (![SQL length]) continue;
+            
+            MDDLog(MDDLoggerLevelInfo, @"%@\n%@", SQL, values);
+            UInt64 lastRowID = 0;
+            result = update(SQL, values, &lastRowID);
+            
+            if (resultBlock) resultBlock(result, lastRowID, index - 1, &stop);
         }
     }];
     
-    return success;
 }
 
 @end
