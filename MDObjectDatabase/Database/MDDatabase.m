@@ -124,9 +124,9 @@ NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
     return contained;
 }
 
-- (BOOL)prepare;{
+- (BOOL)prepareWithError:(NSError **)error;{
     [[self lock] lock];
-    BOOL state = [self _prepare];
+    BOOL state = [self _prepareWithError:error];
     [[self lock] unlock];
     return state;
 }
@@ -516,10 +516,9 @@ NSString * const MDDatabaseQueryRowSQL = @"SELECT * FROM %@ LIMIT 0";
     return [indexes copy];
 }
 
-- (BOOL)_prepare{
-    NSError *error = nil;
+- (BOOL)_prepareWithError:(NSError **)error{
     for (Class<MDDObject> class in [[self classes] allValues]) {
-        BOOL state = [self _initialTableWithClass:class error:&error];
+        BOOL state = [self _initialTableWithClass:class error:error];
         if (!state) return NO;
     }
     return YES;

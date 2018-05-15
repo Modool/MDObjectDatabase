@@ -18,7 +18,7 @@
 - (id<MDDTableInfo>)requireInfoWithClass:(Class<MDDObject>)class error:(NSError **)error;
 - (BOOL)existForClass:(Class<MDDObject>)class;
 
-- (BOOL)prepare;
+- (BOOL)prepareWithError:(NSError **)error;
 - (void)close;
 
 - (MDDCompat *)addTableConfiguration:(MDDTableConfiguration *)configuration error:(NSError **)error;

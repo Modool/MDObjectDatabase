@@ -113,7 +113,7 @@
         
         compat = [database addViewConfiguration:viewConfiguration error:&error];
         
-        [database prepare];
+        [database prepareWithError:nil];
     });
     return database;
 }
