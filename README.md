@@ -1,4 +1,4 @@
-# MDDatabase
+# MDObjectDatabase
 
 [![](https://img.shields.io/travis/rust-lang/rust.svg?style=flat)](https://github.com/Modool)
 [![](https://img.shields.io/badge/language-Object--C-1eafeb.svg?style=flat)](https://developer.apple.com/Objective-C)
@@ -12,7 +12,7 @@
 
 ## How To Get Started
 
-* Download `MDDatabase ` and try run example app
+* Download `MDObjectDatabase ` and try run example app
 
 ## Installation
 
@@ -24,7 +24,7 @@ source 'https://github.com/Modool/cocoapods-specs.git'
 platform :ios, '8.0'
 
 target 'TargetName' do
-pod 'MDDatabase', '~> 1.0.0'
+pod 'MDObjectDatabase', '~> 1.0.0'
 end
 
 ```
@@ -32,13 +32,13 @@ end
 * Installation with Carthage
 
 ```
-github "Modool/MDDatabase" ~> 1.0.0
+github "Modool/MDObjectDatabase" ~> 1.0.0
 ```
 
 * Manual Import
 
 ```
-drag “MDDatabase” directory into your project
+drag “MDObjectDatabase” directory into your project
 
 ```
 
