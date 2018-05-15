@@ -52,12 +52,7 @@ typedef NS_ENUM(NSUInteger, MDDConditionOperation) {
     MDDConditionOperationOr,
 };
 
-#if UIKIT_STRING_ENUMS
-typedef NSString * MDDFunction NS_EXTENSIBLE_STRING_ENUM;
-#else
 typedef NSString * MDDFunction;
-#endif
-
 MDD_EXTERN NSString * const MDDatabaseToken;
 
 MDD_EXTERN MDDFunction const MDDFunctionSUM;
