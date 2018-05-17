@@ -36,7 +36,7 @@
 }
 
 - (id<MDDTableInfo>)tableInfo{
-    return [super tableInfo] ?: [[self conditionSet] tableInfo];
+    return super.tableInfo ?: _conditionSet.tableInfo;
 }
 
 - (NSString *)description{
@@ -49,47 +49,51 @@
     NSMutableArray *values = [NSMutableArray array];
     NSMutableArray<NSString *> *columns = [NSMutableArray<NSString *> array];
     
-    NSMutableSet<MDDTableInfo> *tableInfos = [NSMutableSet<MDDTableInfo> set];
-    [tableInfos unionSet:[[self conditionSet] mutableTableInfos]];
+    NSMutableSet<MDDTableInfo> *tableInfos = [NSMutableSet<MDDTableInfo> setWithObject:self.tableInfo];
+    [tableInfos unionSet:_conditionSet.mutableTableInfos];
     
-    for (MDDItem *property in [self properties]) {
-        MDDDescription *description = [property SQLDescription];
-        if ([property tableInfo]) [tableInfos addObject:[property tableInfo]];
+    for (MDDItem *property in _properties) {
+        MDDDescription *description = property.SQLDescription;
+        if (property.tableInfo) [tableInfos addObject:property.tableInfo];
         
-        [columns addObject:[description SQL]];
-        [values addObjectsFromArray:[description values]];
+        [columns addObject:description.SQL];
+        [values addObjectsFromArray:description.values];
+    }
+    
+    for (MDDSort *sort in _sorts) {
+        if (sort.tableInfo) [tableInfos addObject:sort.tableInfo];
     }
     
     NSString *property = [columns componentsJoinedByString:@", "];
     property = [property length] ? property : @" * ";
     
-    MDDIndex *index = [[self conditionSet] index];
-    NSString *indexString = index ? [NSString stringWithFormat:@" INDEXED BY %@ ", [index name]] : @"";
+    MDDIndex *index = _conditionSet.index;
+    NSString *indexString = index ? [NSString stringWithFormat:@" INDEXED BY %@ ", index.name] : @"";
     
-    MDDDescription *description = [[self set] SQLDescription];
+    MDDDescription *description = _set.SQLDescription;
     NSString *tableSet = nil;
     if (description) {
-        tableSet = [description SQL];
-        [values addObjectsFromArray:[description values]];
+        tableSet = description.SQL;
+        [values addObjectsFromArray:description.values];
     } else {
-        tableSet = [[[tableInfos allObjects] valueForKey:@MDDKeyPath(MDDTableInfo, name)] componentsJoinedByString:@" , "];
+        tableSet = [[tableInfos.allObjects valueForKey:@MDDKeyPath(MDDTableInfo, name)] componentsJoinedByString:@" , "];
     }
     NSMutableString *SQL = [NSMutableString stringWithFormat:@" SELECT %@ FROM %@ %@ ", property, tableSet, indexString];
     
-    if (self.set) description = [[self conditionSet] SQLDescriptionInSet:self.set];
-    else description = [[self conditionSet] SQLDescription];
+    if (_set) description = [_conditionSet SQLDescriptionInSet:_set];
+    else description = _conditionSet.SQLDescription;
      
-    if ([description SQL]) {
-        [SQL appendFormat:@" WHERE %@ ", [description SQL]];
+    if (description.SQL) {
+        [SQL appendFormat:@" WHERE %@ ", description.SQL];
         [values addObjectsFromArray:description.values];
     }
     
-    description = [MDDSort descriptionWithSorts:[self sorts]];
-    if ([description SQL]) {
-        [SQL appendFormat:@" ORDER BY %@ ", [description SQL] ?: @""];
+    description = [MDDSort descriptionWithSorts:_sorts];
+    if (description.SQL) {
+        [SQL appendFormat:@" ORDER BY %@ ", description.SQL ?: @""];
     }
     
-    NSRange range = [self range];
+    NSRange range = _range;
     if (range.location || range.length) {
         range.length = range.length ?: INT_MAX;
         [SQL appendFormat:@" LIMIT %lu OFFSET %ld ", (unsigned long)range.length, (unsigned long)range.location];
