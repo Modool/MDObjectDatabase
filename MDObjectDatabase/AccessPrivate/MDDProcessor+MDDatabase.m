@@ -168,6 +168,7 @@
             
             if (resultBlock) resultBlock(result, lastRowID, index - 1, &stop);
         }
+        *rollback = !result;
     }];
     
 }
