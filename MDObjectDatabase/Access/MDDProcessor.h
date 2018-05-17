@@ -99,7 +99,6 @@
 - (NSArray *)queryWithConditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;
 
 - (NSUInteger)queryCountWithProperty:(NSString *)property value:(id)value;
-- (NSUInteger)queryCountWithConditionSet:(MDDConditionSet *)conditionSet;
 - (NSUInteger)queryCountWithProperty:(NSString *)property conditionSet:(MDDConditionSet *)conditionSet;
 - (id)queryWithProperty:(NSString *)property function:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;
 

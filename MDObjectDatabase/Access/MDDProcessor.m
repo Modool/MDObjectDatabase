@@ -493,11 +493,7 @@
     MDDCondition *condition = [MDDCondition conditionWithTableInfo:_tableInfo property:property value:value];
     MDDConditionSet *conditionSet = condition ? [MDDConditionSet setWithCondition:condition] : nil;
     
-    return [[self queryWithProperty:nil function:MDDFunctionCOUNT conditionSet:conditionSet] unsignedIntegerValue];
-}
-
-- (NSUInteger)queryCountWithConditionSet:(MDDConditionSet *)conditionSet;{
-    return [[self queryWithProperty:nil function:MDDFunctionCOUNT conditionSet:conditionSet] unsignedIntegerValue];
+    return [[self queryWithProperty:property function:MDDFunctionCOUNT conditionSet:conditionSet] unsignedIntegerValue];
 }
 
 - (NSUInteger)queryCountWithProperty:(NSString *)property conditionSet:(MDDConditionSet *)conditionSet;{
