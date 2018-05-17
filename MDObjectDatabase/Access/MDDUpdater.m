@@ -15,14 +15,10 @@
 
 @implementation MDDUpdater
 
-+ (instancetype)updaterWithSetter:(NSArray<MDDSetter *> *)setters;{
-    return [self updaterWithSetter:setters conditionSet:nil];
-}
-
 + (instancetype)updaterWithSetter:(NSArray<MDDSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;{
     MDDUpdater *descriptor = [self descriptorWithTableInfo:[[setters firstObject] tableInfo]];
-    descriptor->_setters = [setters copy];
-    descriptor->_conditionSet = conditionSet;
+    descriptor.setters = [setters copy];
+    descriptor.conditionSet = conditionSet;
     
     return descriptor;
 }

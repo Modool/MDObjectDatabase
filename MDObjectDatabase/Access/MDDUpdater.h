@@ -12,11 +12,10 @@
 @class MDDSetter, MDDConditionSet, MDDTableInfo;
 @interface MDDUpdater : MDDDescriptor
 
-@property (nonatomic, copy, readonly) NSArray<MDDSetter *> *setters;
+@property (nonatomic, copy) NSArray<MDDSetter *> *setters;
 
-@property (nonatomic, strong, readonly) MDDConditionSet *conditionSet;
+@property (nonatomic, strong) MDDConditionSet *conditionSet;
 
-+ (instancetype)updaterWithSetter:(NSArray<MDDSetter *> *)setters;
 + (instancetype)updaterWithSetter:(NSArray<MDDSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;
 
 + (instancetype)updaterWithObject:(id)object tableInfo:(MDDTableInfo *)tableInfo;

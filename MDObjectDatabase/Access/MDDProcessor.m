@@ -474,7 +474,10 @@
 }
 
 - (NSArray *)queryWithConditionSet:(MDDConditionSet *)conditionSet sorts:(NSArray<MDDSort *> *)sorts range:(NSRange)range;{
-    MDDQuery *query = [MDDQuery queryWithPropertys:nil set:nil conditionSet:conditionSet sorts:sorts range:range objectClass:[self objectClass]];
+    MDDQuery *query = [MDDQuery queryWithTableInfo:_tableInfo objectClass:_objectClass];
+    query.conditionSet = conditionSet;
+    query.sorts = sorts;
+    query.range = range;
     NSParameterAssert(query);
     
     __block NSMutableArray *results = [NSMutableArray array];
@@ -503,7 +506,8 @@
 
 - (id)queryWithProperty:(NSString *)propertyName function:(MDDFunction)function conditionSet:(MDDConditionSet *)conditionSet;{
     MDDFuntionProperty *property = [MDDFuntionProperty propertyWithTableInfo:_tableInfo name:propertyName function:function alias:@"function_result"];
-    MDDFunctionQuery *query = [MDDFunctionQuery fuctionQueryWithProperty:property conditionSet:conditionSet];
+    MDDFunctionQuery *query = [MDDFunctionQuery functionQueryWithTableInfo:_tableInfo property:property];
+    query.conditionSet = conditionSet;
     
     __block id result = nil;
     [self executeQuery:query block:^(id value) {

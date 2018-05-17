@@ -14,31 +14,17 @@
 
 @implementation MDDFunctionQuery
 
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property;{
-    return [self fuctionQueryWithProperty:property conditionSet:nil];
++ (instancetype)functionQueryWithTableInfo:(id<MDDTableInfo>)tableInfo property:(MDDFuntionProperty *)property;{
+    return [self functionQueryWithTableInfo:tableInfo property:property alias:nil];
 }
 
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property conditionSet:(MDDConditionSet *)conditionSet;{
-    return [self fuctionQueryWithProperty:property set:nil conditionSet:conditionSet];
-}
-
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet;{
-    return [self fuctionQueryWithProperty:property set:set conditionSet:conditionSet alias:nil];
-}
-
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property alias:(NSString *)alias;{
-    return [self fuctionQueryWithProperty:property conditionSet:nil alias:alias];
-}
-
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;{
-    return [self fuctionQueryWithProperty:property set:nil conditionSet:conditionSet alias:alias];
-}
-
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;{
-    MDDFunctionQuery *query = [self queryWithPropertys:(id)[NSSet setWithObject:property] set:set conditionSet:conditionSet sorts:nil range:NSRangeZore transform:^id(NSDictionary *result) {
++ (instancetype)functionQueryWithTableInfo:(id<MDDTableInfo>)tableInfo property:(MDDFuntionProperty *)property alias:(NSString *)alias;{
+    MDDFunctionQuery *query = [self descriptorWithTableInfo:tableInfo];
+    query.properties = (id)[NSSet setWithObject:property];
+    query.alias = alias;
+    query.transform = ^id(NSDictionary *result) {
         return property.alias ? result[property.alias] : result;
-    }];
-    query->_alias = alias;
+    };
     
     return query;
 }

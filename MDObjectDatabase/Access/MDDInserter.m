@@ -15,14 +15,10 @@
 
 @implementation MDDInserter
 
-+ (instancetype)inserterWithTableInfo:(MDDTableInfo *)tableInfo setters:(NSArray<MDDInsertSetter *> *)setters;{
-    return [self inserterWithTableInfo:tableInfo setters:setters conditionSet:nil];
-}
-
 + (instancetype)inserterWithTableInfo:(MDDTableInfo *)tableInfo setters:(NSArray<MDDInsertSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;{
     MDDInserter *descriptor = [self descriptorWithTableInfo:tableInfo];
-    descriptor->_setters = [setters copy];
-    descriptor->_conditionSet = conditionSet;
+    descriptor.setters = setters;
+    descriptor.conditionSet = conditionSet;
     
     return descriptor;
 }
@@ -33,7 +29,7 @@
     NSArray<MDDInsertSetter *> *setters = [MDDInsertSetter settersWithObject:object tableInfo:tableInfo];
     NSParameterAssert(setters && [setters count]);
     
-    return [MDDInserter inserterWithTableInfo:tableInfo setters:setters];
+    return [MDDInserter inserterWithTableInfo:tableInfo setters:setters conditionSet:nil];
 }
 
 - (MDDDescription *)SQLDescription;{

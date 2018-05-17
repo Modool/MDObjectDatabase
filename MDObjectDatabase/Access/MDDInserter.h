@@ -12,11 +12,10 @@
 @class MDDInsertSetter, MDDTableInfo, MDDConditionSet;
 @interface MDDInserter : MDDDescriptor
 
-@property (nonatomic, copy, readonly) NSArray<MDDInsertSetter *> *setters;
+@property (nonatomic, copy) NSArray<MDDInsertSetter *> *setters;
 
-@property (nonatomic, strong, readonly) MDDConditionSet *conditionSet;
+@property (nonatomic, strong) MDDConditionSet *conditionSet;
 
-+ (instancetype)inserterWithTableInfo:(MDDTableInfo *)tableInfo setters:(NSArray<MDDInsertSetter *> *)setters;
 + (instancetype)inserterWithTableInfo:(MDDTableInfo *)tableInfo setters:(NSArray<MDDInsertSetter *> *)setters conditionSet:(MDDConditionSet *)conditionSet;
 
 + (instancetype)inserterWithObject:(id)object tableInfo:(id<MDDTableInfo>)tableInfo;

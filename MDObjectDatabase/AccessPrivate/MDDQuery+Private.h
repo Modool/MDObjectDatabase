@@ -10,8 +10,6 @@
 
 @interface MDDQuery ()
 
-@property (nonatomic, copy, readonly) id (^transform)(NSDictionary *result);
-
 - (id)transformValue:(NSDictionary *)value;
 
 @end

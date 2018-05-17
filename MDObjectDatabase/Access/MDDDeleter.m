@@ -13,13 +13,9 @@
 
 @implementation MDDDeleter
 
-+ (instancetype)deleterWithTableInfo:(MDDTableInfo *)tableInfo;{
-    return [self deleterWithTableInfo:tableInfo conditionSet:nil];
-}
-
 + (instancetype)deleterWithTableInfo:(MDDTableInfo *)tableInfo conditionSet:(MDDConditionSet *)conditionSet;{
     MDDDeleter *descriptor = [self descriptorWithTableInfo:tableInfo];
-    descriptor->_conditionSet = conditionSet;
+    descriptor.conditionSet = conditionSet;
     
     return descriptor;
 }
@@ -38,7 +34,7 @@
 }
 
 - (NSString *)description{
-    return [[self conditionSet] description];
+    return [[self SQLDescription] description];
 }
 
 @end

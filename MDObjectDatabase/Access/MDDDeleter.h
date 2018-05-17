@@ -11,9 +11,8 @@
 @class MDDConditionSet;
 @interface MDDDeleter : MDDDescriptor
 
-@property (nonatomic, strong, readonly) MDDConditionSet *conditionSet;
+@property (nonatomic, strong) MDDConditionSet *conditionSet;
 
-+ (instancetype)deleterWithTableInfo:(id<MDDTableInfo>)tableInfo;
 + (instancetype)deleterWithTableInfo:(id<MDDTableInfo>)tableInfo conditionSet:(MDDConditionSet *)conditionSet;
 
 @end

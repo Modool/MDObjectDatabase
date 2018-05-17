@@ -11,15 +11,10 @@
 @class MDDFuntionProperty;
 @interface MDDFunctionQuery : MDDQuery
 
-@property (nonatomic, copy, readonly) NSString *alias;
+@property (nonatomic, copy) NSString *alias;
 
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property;
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property conditionSet:(MDDConditionSet *)conditionSet;
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet;
-
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property alias:(NSString *)alias;
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;
-+ (instancetype)fuctionQueryWithProperty:(MDDFuntionProperty *)property set:(MDDSet *)set conditionSet:(MDDConditionSet *)conditionSet alias:(NSString *)alias;
++ (instancetype)functionQueryWithTableInfo:(id<MDDTableInfo>)tableInfo property:(MDDFuntionProperty *)property;
++ (instancetype)functionQueryWithTableInfo:(id<MDDTableInfo>)tableInfo property:(MDDFuntionProperty *)property alias:(NSString *)alias;
 
 @end
 
