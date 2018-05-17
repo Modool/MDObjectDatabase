@@ -351,6 +351,7 @@ NSDictionary *MDDColumnTypeDescriptions(){
         descriptions = @{@(MDDColumnTypeText): @"TEXT",
                          @(MDDColumnTypeInteger): @"INTEGER",
                          @(MDDColumnTypeFloat): @"FLOAT",
+                         @(MDDColumnTypeDouble): @"DOUBLE",
                          @(MDDColumnTypeData): @"BLOB",
                          };
     });
@@ -372,8 +373,10 @@ MDDColumnType MDDColumnTypeFromAttribute(MDPropertyAttributes *attribute) {
     if (strcmp(type, @encode(CGPoint)) == 0 || strcmp(type, @encode(CGSize)) == 0 ||
         strcmp(type, @encode(UIEdgeInsets)) == 0 || strcmp(type, @encode(NSString *)) == 0) {
         return MDDColumnTypeText;
-    } else if (strcmp(type, @encode(float)) == 0 || strcmp(type, @encode(double)) == 0) {
+    } else if (strcmp(type, @encode(float)) == 0) {
         return MDDColumnTypeFloat;
+    } else if (strcmp(type, @encode(double)) == 0 || strcmp(type, @encode(CGFloat)) == 0) {
+        return MDDColumnTypeDouble;
     } else if (strcmp(type, @encode(int)) == 0 || strcmp(type, @encode(long)) == 0 ||
                strcmp(type, @encode(long long)) == 0 || strcmp(type, @encode(short)) == 0 ||
                strcmp(type, @encode(char)) == 0 || strcmp(type, @encode(unsigned char)) == 0 ||
