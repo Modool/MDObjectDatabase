@@ -235,7 +235,7 @@
         SQL = [SQL stringByReplacingOccurrencesOfString:@"  " withString:@" "];
     }
     
-    NSString *unionPattern = @"primary\\s*key\\s+\\((\\s*([a-z]|_){1,}\\s*\\,)*\\s*([a-z]|_){1,}\\s*\\)";
+    NSString *unionPattern = @"primary\\s+key\\s*\\((\\s*([a-z]|_){1,}\\s*\\,)*\\s*([a-z]|_){1,}\\s*\\)";
     NSString *compositePattern = @"constraint\\s+([a-z]|_)+\\s+primary\\s+key\\s+\\((\\s*([a-z]|_){1,}\\s*\\,)*\\s*([a-z]|_){1,}\\s*\\)";
     
     NSString *compositePropertyName = nil;
