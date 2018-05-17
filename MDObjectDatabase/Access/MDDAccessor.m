@@ -21,16 +21,17 @@
 @implementation MDDAccessor
 
 - (instancetype)initWithClass:(Class<MDDObject>)class database:(MDDatabase *)database;{
-    NSString *queueName = [NSString stringWithFormat:@"com.modool.database.queue.default%llu", (unsigned long long)self];
-    dispatch_queue_t queue = dispatch_queue_create(queueName.UTF8String, NULL);
-    
-    return [self initWithClass:class database:database queue:queue];
+    return [self initWithClass:class database:database queue:nil];
 }
 
 - (instancetype)initWithClass:(Class<MDDObject>)class database:(MDDatabase *)database queue:(dispatch_queue_t)queue;{
     if (self = [super init]) {
         _objectClass = class;
         _database = database;
+        
+        NSString *queueName = [NSString stringWithFormat:@"com.modool.database.queue.default%llu", (unsigned long long)self];
+        queue = queue ?: dispatch_queue_create(queueName.UTF8String, NULL);
+        
         _queue = queue;
         _queueTag = &_queueTag;
         dispatch_queue_set_specific(queue, _queueTag, _queueTag, NULL);
